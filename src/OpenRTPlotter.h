@@ -13,6 +13,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
 namespace OpenRTP {
     class OpenRTPlotter;
 
@@ -22,46 +23,74 @@ namespace OpenRTP {
         char *YName, *XName;    // Y & X axis names
     };
 
-    struct point {
+    struct Point 
+    {
         GLfloat x;
         GLfloat y;
     };
 
-    class OpenRTPlotter 
+    struct Plot 
+    {
+        std::string Name;
+        glm::vec4 Color;
+        std::vector<Point> Function;
+
+        Plot(std::string TName)
+        {
+            Name = TName;
+        }
+
+        Plot(std::string TName, glm::vec4 TColor)
+        {
+            Name = TName;
+            Color = TColor;
+        }
+    };
+
+    class OpenRTPlotter
     {
     public:
         OpenRTPlotter();
+        //OpenRTPlotter(InitStruct PlotInfo, Plot SinglePlot);
+        OpenRTPlotter(InitStruct PlotInfo, std::vector<Plot> MultiPlot);
 
         int OpenRTPlotterInit();
+        void InsertPointByName(std::string Name, Point SinglePoint);
+        void InsertPointRangeByName(std::string Name, std::vector<Point> SinglePoint, int Start, int End);
+        void InsertPointRangeByPlot(std::vector<Plot> Plot, int Start, int End);
 
     private:
         int CreateWindow();
         glm::mat4 ViewportTransform(float x, float y, float width, float height, float *pixel_x,    float *pixel_y);
         void Draw();
+        void GraphDraw(glm::mat4 Transform, int WindowWidth, int WindowHeight);
+        void PointDraw(Plot ToDraw);
+        void BorderDraw(glm::mat4 Transform, int WindowWidth, int WindowHeight);
         void Free();
         int Resources();
         void InitData();
         void Input();
+        void TestFunctions();
         InitStruct Info;
 
         GLFWwindow* window;
 
         float width, height; //Window size
         float *PixelX, *PixelY; //Pixel size
-        std::vector<point> Specie;
-        std::vector<point> Specie2;
+        std::vector<Plot> ToPlot; //Store all plotting data
         //TmpValues
         const int margin = 20;
         const int ticksize = 20;
-        float offset_x = -1;
-        float offset_y = -1;
-        float scale_x = 1;
+        float offset_x = -10;
+        float offset_y = -10;
+        float scale = 0.1;
         GLuint Program;
         GLint attribute_coord2d;
         GLint uniform_color;
         GLint uniform_transform;
         GLuint vbo[3];
         GLuint Spec[2];
-        int Once = 1;
+        GLuint PlotBuf;
+        bool MultiLine;
     };
 }

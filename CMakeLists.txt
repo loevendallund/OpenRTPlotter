@@ -23,10 +23,16 @@ if (GLEW_FOUND)
     link_libraries(${GLEW_LIBRARIES})
 endif()
 
-add_library(OpenRTP STATIC ${LIBSOURCES})
+find_package(Freetype REQUIRED)
+if (Freetype_FOUND)
+  include_directories(${FREETYPE_INCLUDE_DIRS})
+  link_libraries(${FREETYPE_LIBRARIES})
+endif()
+
+add_library(OpenRTP ${LIBSOURCES})
 
 add_executable(openplotter
 	"src/main.cpp"
 )
 
-target_link_libraries(openplotter OpenRTP glfw OpenGL::GL)
+target_link_libraries(openplotter OpenRTP glfw OpenGL::GL ${FREETYPE_LIBRARIES})

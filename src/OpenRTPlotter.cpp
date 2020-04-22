@@ -30,21 +30,8 @@ namespace OpenRTP
         Info.Title = PlotInfo.Title;
         Info.YName = PlotInfo.XName;
         Info.XName = PlotInfo.YName;
-
-        /*for (int i = 0; i < MultiPlot.size(); i++)
-        {
-            ToPlot.push_back(MultiPlot[i].Name);
-            ToPlot[i].Color = MultiPlot[i].Color;
-
-            for (int j = 0; j < MultiPlot[i].Function.size(); j++)
-            {
-                ToPlot[i].Function.push_back(MultiPlot[i].Function[j]);
-            }
-            
-        }*/
         
         ToPlot = MultiPlot;
-        //TestFunctions();
         MultiLine = true;
     }
 
@@ -54,11 +41,15 @@ namespace OpenRTP
 
         Resources();
 
+        mFont = new Font(window);
+        int result = mFont->Init();
+
+        mFont->CreateAtlas(at, "fonts/FreeSans.ttf", 48);
+        at = new Font::atlas(mFont->face, 16, mFont->uniform_tex);
+
         /* Loop until the user closes the window */
         while (!glfwWindowShouldClose(window))
         {
-            glClear(GL_COLOR_BUFFER_BIT);
-
             /* Render */
             glClearColor(1, 1, 1, 1);
             glClear(GL_COLOR_BUFFER_BIT);
@@ -101,17 +92,18 @@ namespace OpenRTP
     {
         int WindowWidth, WindowHeight;
         glfwGetFramebufferSize(window, &WindowWidth, &WindowHeight);
+        float sx = 2.0 / WindowWidth;
+	    float sy = 2.0 / WindowHeight;
 
         glUseProgram(Program);
 
         glm::mat4 Transform = glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(scale, scale, 1)), glm::vec3(offset_x, offset_y, 0));
         glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, glm::value_ptr(Transform));
-
-        /**Draw graph**/
         
         GraphDraw(Transform, WindowWidth, WindowHeight);
-
         BorderDraw(Transform, WindowWidth, WindowHeight);
+
+        //mFont->TextDraw("TT", at, -1 + 8 * sx, 1 - 50 * sy);
 
         glDisableVertexAttribArray(attribute_coord2d);
     }
@@ -140,7 +132,6 @@ namespace OpenRTP
         glBindBuffer(GL_ARRAY_BUFFER, PlotBuf);
         glBufferData(GL_ARRAY_BUFFER, ToDraw.Function.size() * sizeof(Point), &ToDraw.Function.front(), GL_DYNAMIC_DRAW);
 
-        //glBindBuffer(GL_ARRAY_BUFFER, ToDraw.Function[0]);
         glEnableVertexAttribArray(attribute_coord2d);
         glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glLineWidth(1);
@@ -151,6 +142,8 @@ namespace OpenRTP
     {
         /* Draw the borders */
         float PixelX, PixelY;
+        float sx = 2.0 / WindowWidth;
+	    float sy = 2.0 / WindowHeight;
 
         // Calculate a transformation matrix that gives us the same normalized device coordinates as    above
     	Transform = ViewportTransform(margin + ticksize + 2, margin + ticksize + 2, WindowWidth -   margin * 2 - ticksize, WindowHeight - margin * 2 - ticksize, &PixelX, &PixelY);
@@ -170,7 +163,7 @@ namespace OpenRTP
         float tickspacing = 0.1 * powf(10, -floor(log10(scale)));	// desired space between ticks, in graph coordinates
 
     	/* Draw the y tick marks */
-        float bottom = -1 / scale - offset_y;
+        float bottom = -1 / scale - (offset_y);
         float top = 1 / scale - offset_y;
         int bottom_i = ceil(bottom / tickspacing);
         int top_i = floor(top / tickspacing);
@@ -185,15 +178,33 @@ namespace OpenRTP
     	for (int i = 0; i < nticksy; i++) {
             float y = firstticky + i * tickspacing * scale;
             float tickscaley = ((i + bottom_i) % 10) ? 0.5 : 1;
+            float tickscaley2 = ((i + bottom_i) % 10) ? 3.5 : 4;
+
+            float x = -1 - ticksize * tickscaley * PixelX;
+            float x2 = -1 - ticksize * 4 * PixelX;
 
             ticks[i * 2].x = -1;
     		ticks[i * 2].y = y;
-    		ticks[i * 2 + 1].x = -1 - ticksize * tickscaley * PixelX;
+    		ticks[i * 2 + 1].x = x;
     		ticks[i * 2 + 1].y = y;
+
+            glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x2, y), 0, 1);
+
+            float wx = ((Pos.x + 1.0) / 2.0) * WindowWidth;
+            float wy = ((Pos.y + 1.0) / 2.0) * WindowHeight;
+
+            Pos = Transform * glm::vec4(glm::vec2(x2, wy), 0, 1);
+
+            std::string s = std::to_string(bottom_i + i);
+            const char *c = s.c_str();
+
+            mFont->TextDraw(c, at, wx, wy);
     	}
+        glUseProgram(Program);
+        glEnableVertexAttribArray(attribute_coord2d);
 
     	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
-    	glBufferData(GL_ARRAY_BUFFER, sizeof ticks, ticks, GL_DYNAMIC_DRAW);
+    	glBufferData(GL_ARRAY_BUFFER, sizeof(ticks), ticks, GL_DYNAMIC_DRAW);
     	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glLineWidth(1);
     	glDrawArrays(GL_LINES, 0, 42);
@@ -203,7 +214,7 @@ namespace OpenRTP
     	float right = 1.0 / scale - offset_x;	// right edge, in graph coordinates
     	int left_i = ceil(left / tickspacing);	// index of left tick, counted from the origin
     	int right_i = floor(right / tickspacing);	// index of right tick, counted from the origin
-    	float rem = left_i * tickspacing - left;	// space between left edge of graph and the first   tick
+    	float rem = left_i * tickspacing - left;	// space between left edge of graph and the first tick
 
     	float firsttick = -1.0 + rem * scale;	// first tick in device coordinates
 
@@ -215,12 +226,29 @@ namespace OpenRTP
     	for (int i = 0; i < nticks; i++) {
     		float x = firsttick + i * tickspacing * scale;
     		float tickscale = ((i + left_i) % 10) ? 0.5 : 1;
+    		float tickscale2 = ((i + left_i) % 10) ? 2 : 2.5;
+
+            float y = -1 - ticksize * tickscale * PixelY;
+            float y2 = -1 - ticksize * tickscale2 * PixelY;
 
     		ticks[i * 2].x = x;
     		ticks[i * 2].y = -1;
     		ticks[i * 2 + 1].x = x;
-    		ticks[i * 2 + 1].y = -1 - ticksize * tickscale * PixelY;
+    		ticks[i * 2 + 1].y = y;
+
+            glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x, y2), 0, 1);
+
+            float wx = ((Pos.x + 1.0) / 2.0) * WindowWidth;
+            float wy = ((Pos.y + 1.0) / 2.0) * WindowHeight;
+
+            std::string s = std::to_string(left_i + i);
+            const char *c = s.c_str();
+
+            //mFont->TextDraw(c, at, wx, wy);
     	}
+
+        glUseProgram(Program);
+        glEnableVertexAttribArray(attribute_coord2d);
 
     	glBufferData(GL_ARRAY_BUFFER, sizeof ticks, ticks, GL_DYNAMIC_DRAW);
     	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
@@ -284,6 +312,14 @@ namespace OpenRTP
                 offset_y += 0.3;
             else
              offset_y = -10;
+        }
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+        {
+            scale *= 1.3;
+        }
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+        {
+            scale /= 1.3;
         }
     }
 

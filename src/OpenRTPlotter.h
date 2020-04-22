@@ -13,6 +13,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Font.h"
 
 namespace OpenRTP {
     class OpenRTPlotter;
@@ -74,6 +75,7 @@ namespace OpenRTP {
         InitStruct Info;
 
         GLFWwindow* window;
+        Font *mFont;
 
         float width, height; //Window size
         float *PixelX, *PixelY; //Pixel size
@@ -92,5 +94,6 @@ namespace OpenRTP {
         GLuint Spec[2];
         GLuint PlotBuf;
         bool MultiLine;
+        Font::atlas *at;
     };
 }

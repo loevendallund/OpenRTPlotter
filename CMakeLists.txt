@@ -13,7 +13,7 @@ file(GLOB LIBSOURCES "src/*.cpp")
 message("${LIBSOURCES}")
 list(REMOVE_ITEM LIBSOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
-find_package(glfw3 3.3 REQUIRED)
+find_package(glfw3 3.2 REQUIRED)
 
 find_package(OpenGL REQUIRED)
 

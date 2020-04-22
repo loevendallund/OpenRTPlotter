@@ -24,35 +24,40 @@
 
 namespace OpenRTP
 {
-  struct point {
-  	GLfloat x;
-  	GLfloat y;
-  	GLfloat s;
-  	GLfloat t;
-  };
+	enum RenderMode {RenderRight, RenderLeft};
 
-  class Font
-  {
-  public:
-    struct atlas;
-    Font(GLFWwindow* TWindow);
+	struct TextPoint {
+		GLfloat x;
+		GLfloat y;
+		GLfloat s;
+		GLfloat t;
+	};
 
-    int Init();
-    int CreateAtlas(atlas *ToCreate, const char* FontFilename, int FontSize);
-    void TextDraw(const char *text, atlas *FontAtlas, float mx, float my);
+  	class Font
+  	{
+  	public:
+  	  struct atlas;
+  	  Font(GLFWwindow* TWindow);
 
-    FT_Face face;
-    GLint uniform_tex;
-  private:
-    GLFWwindow* Window;
-    GLuint program;
-    GLint attribute_coord;
-    GLint uniform_color;
-    GLuint vbo;
+  	  int Init();
+  	  int CreateAtlas(atlas *ToCreate, const char* FontFilename, int FontSize);
+  	  void TextDraw(std::string text, atlas *FontAtlas, float mx, float my, RenderMode Mode);
 
-    FT_Library ft;
+  	  FT_Face face;
+  	  GLint uniform_tex;
+  	private:
+		std::vector<TextPoint> TextLeft(std::string Text, int *NumOfChar, atlas *FontAtlas, float 	x, float y);
+		std::vector<TextPoint> TextRight(std::string Text, int *NumOfChar, atlas *FontAtlas, 	float x, float y);
 
-public:
+  	  GLFWwindow* Window;
+  	  GLuint program;
+  	  GLint attribute_coord;
+  	  GLint uniform_color;
+  	  GLuint vbo;
+
+  	  FT_Library ft;
+
+	public:
     struct atlas {
   	GLuint tex;		// texture object
 

@@ -46,32 +46,14 @@ namespace OpenRTP
         return 1;
     }
 
-    void Font::TextDraw(const char *text, atlas *FontAtlas, float mx, float my)
+    void Font::TextDraw(std::string text, atlas *FontAtlas, float mx, float my, RenderMode Mode)
     {
         int WindowWidth, WindowHeight;
         glfwGetFramebufferSize(Window, &WindowWidth, &WindowHeight);
 
-        const uint8_t *TPointer;
-        point coords[6 * strlen(text)];
-	    int c = 0;
-
-        float BoxX = 100;
-        float BoxY = 16*1.65;
-        float SizeX = 2.0 / BoxX;
-        float SizeY = 2.0 / BoxY;
-        float x = 0;
-        float y = 0;
-
         glUseProgram(program);
         GLfloat black[4] = { 0, 0, 0, 1 };
         glViewport(0, 0, WindowWidth, WindowHeight);
-
-        /*Init renderbox size*/
-        //float TextboxX = 200;
-        //float TextboxY = 200;
-        /*Init font render scaler*/
-        //float SizeX = 2.0 / WindowWidth;
-        //float SizeY = 2.0 / WindowHeight;
 
         /* Enable blending, necessary for our alpha texture */
 	    glEnable(GL_BLEND);
@@ -86,64 +68,163 @@ namespace OpenRTP
         glEnableVertexAttribArray(attribute_coord);
 	    glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	    glVertexAttribPointer(attribute_coord, 4, GL_FLOAT, GL_FALSE, 0, 0);
+        int tc = 0;
+        std::vector<TextPoint> CoordsV;
 
-        for(TPointer = (const uint8_t *)text; *TPointer; TPointer++)
+        switch (Mode)
         {
-            float XPos = x;
-            float YPos = -y;
-            float Width = FontAtlas->c[*TPointer].bw * SizeX;
-            float Height = FontAtlas->c[*TPointer].bh * SizeY;
+        case RenderRight:
+            CoordsV = TextRight(text, &tc, FontAtlas, mx, my);
+            break;
+        case RenderLeft:
+            CoordsV = TextLeft(text, &tc, FontAtlas, mx, my);
+            break;
+        }
+        //std::vector<TextPoint> CoordsV = TextLeft(text, &tc, FontAtlas, mx, my);
 
-            x += FontAtlas->c[*TPointer].ax * SizeX;
-            y += FontAtlas->c[*TPointer].ay * SizeY;
+        glViewport(0, 0, WindowWidth, WindowHeight);
+
+        glBufferData(GL_ARRAY_BUFFER, CoordsV.size() * sizeof(TextPoint), &CoordsV.front(), GL_DYNAMIC_DRAW);
+	    glDrawArrays(GL_TRIANGLES, 0, tc);
+
+	    glDisableVertexAttribArray(attribute_coord);
+    }
+
+    std::vector<TextPoint> Font::TextLeft(std::string Text, int *NumOfChar, atlas *FontAtlas, float x, float y)
+    {   
+        int WindowWidth, WindowHeight;
+        glfwGetFramebufferSize(Window, &WindowWidth, &WindowHeight);
+
+        std::vector<TextPoint> Coords;
+
+        const char *CText = Text.c_str();
+
+        float XPos, YPos;
+        float Width, Height;
+        float SizeX = 2.0 / WindowWidth;
+        float SizeY = 2.0 / WindowHeight;
+
+        for (int TPointer = 0; TPointer < Text.length(); TPointer++)
+        {
+            *NumOfChar += 6;
+            XPos = x;
+            YPos = -y;
+            Width = FontAtlas->c[Text[TPointer]].bw * SizeX;
+            Height = FontAtlas->c[Text[TPointer]].bh * SizeY;
+
+            x += FontAtlas->c[Text[TPointer]].ax * SizeX;
+            y += FontAtlas->c[Text[TPointer]].ay * SizeY;
 
             if(!Width || !Height)
                 continue;
-            
-            coords[c++] = (point) 
+
+            Coords.push_back((TextPoint) 
             {   XPos, 
                 -YPos,
-                FontAtlas->c[*TPointer].tx, 
-                FontAtlas->c[*TPointer].ty
-            };
-            coords[c++] = (point) 
+                FontAtlas->c[Text[TPointer]].tx, 
+                FontAtlas->c[Text[TPointer]].ty
+            });
+            Coords.push_back((TextPoint) 
             {   XPos + Width, 
                 -YPos, 
-                FontAtlas->c[*TPointer].tx + FontAtlas->c[*TPointer].bw /FontAtlas->w,
-                FontAtlas->c[*TPointer].ty
-            };
-            coords[c++] = (point) 
+                FontAtlas->c[Text[TPointer]].tx + FontAtlas->c[Text[TPointer]].bw /FontAtlas->w,
+                FontAtlas->c[Text[TPointer]].ty
+            });
+            Coords.push_back((TextPoint) 
             {   XPos, 
                 -YPos - Height, 
-                FontAtlas->c[*TPointer].tx,
-                FontAtlas->c[*TPointer].ty + FontAtlas->c[*TPointer].bh / FontAtlas->h
-            };
-            coords[c++] = (point) 
+                FontAtlas->c[Text[TPointer]].tx,
+                FontAtlas->c[Text[TPointer]].ty + FontAtlas->c[Text[TPointer]].bh / FontAtlas->h
+            });
+            Coords.push_back((TextPoint) 
             {   XPos + Width, 
                 -YPos, 
-                FontAtlas->c[*TPointer].tx + FontAtlas->c[*TPointer].bw /FontAtlas->w,
-                FontAtlas->c[*TPointer].ty
-            };
-            coords[c++] = (point) 
+                FontAtlas->c[Text[TPointer]].tx + FontAtlas->c[Text[TPointer]].bw /FontAtlas->w,
+                FontAtlas->c[Text[TPointer]].ty
+            });
+            Coords.push_back((TextPoint) 
             {   XPos, 
                 -YPos - Height, 
-                FontAtlas->c[*TPointer].tx,
-                FontAtlas->c[*TPointer].ty + FontAtlas->c[*TPointer].bh / FontAtlas->h
-            };
-            coords[c++] = (point) 
+                FontAtlas->c[Text[TPointer]].tx,
+                FontAtlas->c[Text[TPointer]].ty + FontAtlas->c[Text[TPointer]].bh / FontAtlas->h
+            });
+            Coords.push_back((TextPoint) 
             {   XPos + Width,
                 -YPos - Height, 
-                FontAtlas->c[*TPointer].tx + FontAtlas->c[*TPointer].bw /FontAtlas->w,
-                FontAtlas->c[*TPointer].ty + FontAtlas->c[*TPointer].bh / FontAtlas->h
-            };
+                FontAtlas->c[Text[TPointer]].tx + FontAtlas->c[Text[TPointer]].bw /FontAtlas->w,
+                FontAtlas->c[Text[TPointer]].ty + FontAtlas->c[Text[TPointer]].bh / FontAtlas->h
+            });
         }
 
-        glViewport(mx, my, BoxX, BoxY);
+        return Coords;
+    }
 
-        glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords, GL_DYNAMIC_DRAW);
-	    glDrawArrays(GL_TRIANGLES, 0, c);
+    std::vector<TextPoint> Font::TextRight(std::string Text, int *NumOfChar, atlas *FontAtlas, float x, float y)
+    {
+        int WindowWidth, WindowHeight;
+        glfwGetFramebufferSize(Window, &WindowWidth, &WindowHeight);
 
-	    glDisableVertexAttribArray(attribute_coord);
-        glViewport(0, 0, WindowWidth, WindowHeight);
+        std::vector<TextPoint> Coords;
+
+        const char *CText = Text.c_str();
+
+        float XPos, YPos;
+        float Width, Height;
+        float SizeX = 2.0 / WindowWidth;
+        float SizeY = 2.0 / WindowHeight;
+
+        for (int TPointer = Text.length() - 1; TPointer >= 0; TPointer--)
+        {
+            *NumOfChar += 6;
+            XPos = x;
+            YPos = -y;
+            Width = FontAtlas->c[Text[TPointer]].bw * SizeX;
+            Height = FontAtlas->c[Text[TPointer]].bh * SizeY;
+
+            x -= FontAtlas->c[Text[TPointer]].ax * SizeX;
+            y -= FontAtlas->c[Text[TPointer]].ay * SizeY;
+
+            if(!Width || !Height)
+                continue;
+
+            Coords.push_back((TextPoint) 
+            {   XPos, 
+                -YPos,
+                FontAtlas->c[Text[TPointer]].tx, 
+                FontAtlas->c[Text[TPointer]].ty
+            });
+            Coords.push_back((TextPoint) 
+            {   XPos + Width, 
+                -YPos, 
+                FontAtlas->c[Text[TPointer]].tx + FontAtlas->c[Text[TPointer]].bw /FontAtlas->w,
+                FontAtlas->c[Text[TPointer]].ty
+            });
+            Coords.push_back((TextPoint) 
+            {   XPos, 
+                -YPos - Height, 
+                FontAtlas->c[Text[TPointer]].tx,
+                FontAtlas->c[Text[TPointer]].ty + FontAtlas->c[Text[TPointer]].bh / FontAtlas->h
+            });
+            Coords.push_back((TextPoint) 
+            {   XPos + Width, 
+                -YPos, 
+                FontAtlas->c[Text[TPointer]].tx + FontAtlas->c[Text[TPointer]].bw /FontAtlas->w,
+                FontAtlas->c[Text[TPointer]].ty
+            });
+            Coords.push_back((TextPoint) 
+            {   XPos, 
+                -YPos - Height, 
+                FontAtlas->c[Text[TPointer]].tx,
+                FontAtlas->c[Text[TPointer]].ty + FontAtlas->c[Text[TPointer]].bh / FontAtlas->h
+            });
+            Coords.push_back((TextPoint) 
+            {   XPos + Width,
+                -YPos - Height, 
+                FontAtlas->c[Text[TPointer]].tx + FontAtlas->c[Text[TPointer]].bw /FontAtlas->w,
+                FontAtlas->c[Text[TPointer]].ty + FontAtlas->c[Text[TPointer]].bh / FontAtlas->h
+            });
+        }
+
+        return Coords;
     }
 }

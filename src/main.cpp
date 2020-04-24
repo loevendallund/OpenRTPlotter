@@ -17,7 +17,7 @@ int main() {
     Plot.push_back({"x2"});
 
     //std::vector<Point> x1, x2;
-    for (int i = 0; i < 4000; i++) {
+    for (int i = 0; i < 3000; i++) {
         //Sinus
 		float x = i / 10.0;
 
@@ -40,7 +40,7 @@ int main() {
 
 	OpenRTP::OpenRTPlotter *mPlot = new OpenRTP::OpenRTPlotter(Init, Plot);
 
-	for (int i = 2000; i < 3000; i++)
+	/*for (int i = 2000; i < 3000; i++)
 	{
         //Sinus
 		float x = i / 10.0;
@@ -57,7 +57,7 @@ int main() {
         v = {vx, vy};
 
         Plot[1].Function.push_back(v);
-	}
+	}*/
 
 	//mPlot->InsertPointRangeByPlot(Plot, 2000, 2999);
 

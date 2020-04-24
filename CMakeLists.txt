@@ -5,12 +5,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # set the project name
-project(OpenPlotter VERSION 0.0.2)
+project(OpenRTPlotter VERSION 0.0.2)
 
 include_directories(${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 include_directories(src)
 file(GLOB LIBSOURCES "src/*.cpp")
-message("${LIBSOURCES}")
+file(GLOB LIBHEADERS "include/*.h")
+file(GLOB LIBHEADERSPri "src/*.h")
 list(REMOVE_ITEM LIBSOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
 find_package(glfw3 3.2 REQUIRED)
@@ -29,10 +30,10 @@ if (Freetype_FOUND)
   link_libraries(${FREETYPE_LIBRARIES})
 endif()
 
-add_library(OpenRTP ${LIBSOURCES})
+add_library(OpenRTP SHARED ${LIBSOURCES})
+target_include_directories(OpenRTP PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include glfw OpenGL::GL Freetype ${FREETYPE_INCLUDE_DIRS})
+target_link_libraries(OpenRTP glfw)
 
-add_executable(openplotter
-	"src/main.cpp"
-)
+install(TARGETS OpenRTP LIBRARY DESTINATION lib)
+install(FILES ${LIBHEADERS} DESTINATION include/OpenRTP)
 
-target_link_libraries(openplotter OpenRTP glfw OpenGL::GL ${FREETYPE_LIBRARIES})

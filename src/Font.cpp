@@ -227,4 +227,9 @@ namespace OpenRTP
 
         return Coords;
     }
+
+    void Font::Free()
+    {
+        glDeleteProgram(program);
+    }
 }

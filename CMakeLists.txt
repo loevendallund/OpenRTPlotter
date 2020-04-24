@@ -5,14 +5,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # set the project name
-project(OpenRTPlotter VERSION 0.0.2)
+project(OpenRTPlotter VERSION 0.0.3)
 
 include_directories(${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 include_directories(src)
 file(GLOB LIBSOURCES "src/*.cpp")
 file(GLOB LIBHEADERS "include/*.h")
-file(GLOB LIBHEADERSPri "src/*.h")
-list(REMOVE_ITEM LIBSOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
 find_package(glfw3 3.2 REQUIRED)
 

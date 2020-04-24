@@ -178,10 +178,9 @@ namespace OpenRTP
     	for (int i = 0; i < nticksy; i++) {
             float y = firstticky + i * tickspacing * scale;
             float tickscaley = ((i + bottom_i) % 10) ? 0.5 : 1;
-            float tickscaley2 = ((i + bottom_i) % 10) ? 3.5 : 4;
 
             float x = -1 - ticksize * tickscaley * PixelX;
-            float x2 = -1 - ticksize * 4 * PixelX;
+            float x2 = -1 - ticksize * PixelX;
 
             ticks[i * 2].x = -1;
     		ticks[i * 2].y = y;
@@ -190,15 +189,9 @@ namespace OpenRTP
 
             glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x2, y), 0, 1);
 
-            float wx = ((Pos.x + 1.0) / 2.0) * WindowWidth;
-            float wy = ((Pos.y + 1.0) / 2.0) * WindowHeight;
-
-            Pos = Transform * glm::vec4(glm::vec2(x2, wy), 0, 1);
-
             std::string s = std::to_string(bottom_i + i);
-            const char *c = s.c_str();
 
-            mFont->TextDraw(c, at, wx, wy);
+            mFont->TextDraw(s, at, Pos.x, Pos.y, RenderRight);
     	}
         glUseProgram(Program);
         glEnableVertexAttribArray(attribute_coord2d);
@@ -226,10 +219,9 @@ namespace OpenRTP
     	for (int i = 0; i < nticks; i++) {
     		float x = firsttick + i * tickspacing * scale;
     		float tickscale = ((i + left_i) % 10) ? 0.5 : 1;
-    		float tickscale2 = ((i + left_i) % 10) ? 2 : 2.5;
 
             float y = -1 - ticksize * tickscale * PixelY;
-            float y2 = -1 - ticksize * tickscale2 * PixelY;
+            float y2 = -1 - ticksize * 0.5 * PixelY;
 
     		ticks[i * 2].x = x;
     		ticks[i * 2].y = -1;
@@ -238,13 +230,9 @@ namespace OpenRTP
 
             glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x, y2), 0, 1);
 
-            float wx = ((Pos.x + 1.0) / 2.0) * WindowWidth;
-            float wy = ((Pos.y + 1.0) / 2.0) * WindowHeight;
-
             std::string s = std::to_string(left_i + i);
-            const char *c = s.c_str();
 
-            //mFont->TextDraw(c, at, wx, wy);
+            mFont->TextDraw(s, at, Pos.x, Pos.y, RenderLeft);
     	}
 
         glUseProgram(Program);

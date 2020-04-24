@@ -59,7 +59,7 @@ namespace OpenRTP {
         int OpenRTPlotterRun();
         void InsertPointByName(std::string Name, Point SinglePoint);
         void InsertPointRangeByName(std::string Name, std::vector<Point> SinglePoint, int Start, int End);
-        void InsertPointRangeByPlot(std::vector<Plot> Plot, int Start, int End);
+        void InsertByPlot(std::vector<Plot> Plot);
 
     private:
         int CreateWindow();

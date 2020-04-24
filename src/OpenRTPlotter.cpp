@@ -48,9 +48,7 @@ namespace OpenRTP
                 {
                     XScale = ceil(element.x);
                 }
-                //std::cout << "calc complete " << element.y << std::endl;
             }
-            std::cout << "calc complete " << MultiPlot.size() << std::endl;
         }
 
         ScaleY = 2/(YScale);
@@ -138,8 +136,6 @@ namespace OpenRTP
         
         GraphDraw(Transform, WindowWidth, WindowHeight);
         BorderDraw(Transform, WindowWidth, WindowHeight);
-
-        //mFont->TextDraw("TT", at, -1 + 8 * sx, 1 - 50 * sy);
 
         glDisableVertexAttribArray(attribute_coord2d);
     }
@@ -258,7 +254,6 @@ namespace OpenRTP
         glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glLineWidth(3);
         glDrawArrays(GL_LINE_STRIP, 0, ToDraw.Function.size());
-        //std::cout << "Draw count: " << ToDraw.Function.size() << std::endl;
     }
 
     void OpenRTPlotter::BorderDraw(glm::mat4 Transform, int WindowWidth, int WindowHeight)
@@ -400,7 +395,7 @@ namespace OpenRTP
 
     void OpenRTPlotter::Free()
     {
-        //mFont->Free();
+        mFont->Free();
         glDeleteProgram(Program);
     }
 
@@ -529,16 +524,8 @@ namespace OpenRTP
         }
     }
     
-    void OpenRTPlotter::InsertPointRangeByPlot(std::vector<Plot> Plot, int Start, int End)
+    void OpenRTPlotter::InsertByPlot(std::vector<Plot> Plot)
     {
-        /*for (int i = 0; i < Plot.size(); i++)
-        {
-            for (int j = Start; j < End; j++)
-            {
-                ToPlot[i].Function.push_back((Point){Plot[i].Function[j].x, Plot[i].Function[j].y});
-                std::cout << ToPlot[i].Name << " " << ToPlot[i].Function[j].x << " " << ToPlot[i].Function[j].y << std::endl;
-            }
-        }*/
         ToPlot = Plot;
 
         if (ToPlot[0].Function.size() > 0)
@@ -564,7 +551,6 @@ namespace OpenRTP
                 {
                     XScale = ceil(elementStart.x * 1.05);
                 }
-                //std::cout << "calc complete " << elementEnd.y << std::endl;
             }
         }
 

@@ -33,6 +33,32 @@ namespace OpenRTP
         
         ToPlot = MultiPlot;
         MultiLine = true;
+
+        if (ToPlot[0].Function.size() > 0)
+        {
+            for (int i = 0; i < MultiPlot.size(); i++)
+            {
+                int size = ToPlot[i].Function.size() - 1;
+                auto element = ToPlot[i].Function[size];
+                if(element.y > YScale)
+                {
+                    YScale = ceil(element.y);
+                }
+                if(element.x > XScale)
+                {
+                    XScale = ceil(element.x);
+                }
+            }
+        }
+
+        ScaleY = 2/(YScale);
+        ScaleX = 2/(XScale);
+
+        offset_y = -(YScale/2);
+        offset_x = -(XScale/2);
+
+        SpeedX = XScale / 100;
+        SpeedY = YScale / 100;
     }
 
     int OpenRTPlotter::OpenRTPlotterInit()
@@ -47,8 +73,12 @@ namespace OpenRTP
         mFont->CreateAtlas(at, "fonts/FreeSans.ttf", 48);
         at = new Font::atlas(mFont->face, 16, mFont->uniform_tex);
 
+        return ret;
+    }
+    int OpenRTPlotter::OpenRTPlotterRun()
+    {
         /* Loop until the user closes the window */
-        while (!glfwWindowShouldClose(window))
+        if (!glfwWindowShouldClose(window))
         {
             /* Render */
             glClearColor(1, 1, 1, 1);
@@ -63,10 +93,14 @@ namespace OpenRTP
             /* Poll for and process events */
             glfwPollEvents();
         }
+        else
+        {
+            Free();
+            glfwTerminate();
+            return 1;
+        }
 
-        Free();
-        glfwTerminate();
-        return ret;
+        return 0;
     }
 
     glm::mat4 OpenRTPlotter::ViewportTransform(float x, float y, float width, float height, float   *pixel_x = 0, float *pixel_y = 0)
@@ -97,13 +131,11 @@ namespace OpenRTP
 
         glUseProgram(Program);
 
-        glm::mat4 Transform = glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(scale, scale, 1)), glm::vec3(offset_x, offset_y, 0));
+        glm::mat4 Transform = glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(ScaleX, ScaleY, 1)), glm::vec3(offset_x, offset_y, 0));
         glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, glm::value_ptr(Transform));
         
         GraphDraw(Transform, WindowWidth, WindowHeight);
         BorderDraw(Transform, WindowWidth, WindowHeight);
-
-        //mFont->TextDraw("TT", at, -1 + 8 * sx, 1 - 50 * sy);
 
         glDisableVertexAttribArray(attribute_coord2d);
     }
@@ -116,6 +148,10 @@ namespace OpenRTP
 
         glEnable(GL_SCISSOR_TEST);
 
+        CalcTicks();
+
+        GraphLine();
+
         for (auto func : ToPlot)
         {
             PointDraw(func);
@@ -123,6 +159,88 @@ namespace OpenRTP
 
         glViewport(0, 0, WindowWidth, WindowHeight);
         glDisable(GL_SCISSOR_TEST);
+    }
+
+    void OpenRTPlotter::CalcTicks()
+    {
+        TickspacingX = 0.1 * powf(10, -floor(log10(ScaleX)));
+        TickspacingY = 0.1 * powf(10, -floor(log10(ScaleY)));
+
+        Left = -1.0 / ScaleX - offset_x;
+    	Right = 1.0 / ScaleX - offset_x;
+    	Bottom = -1.0 / ScaleY - offset_y;
+    	Top = 1.0 / ScaleY - offset_y;
+    }
+
+    void OpenRTPlotter::GraphLine()
+    {
+        glm::vec4 Color1 = glm::vec4(0.7, 0.7, 0.7, 1);
+
+        Point ticks[42];
+
+        int Left_i = ceil(Left / TickspacingX);
+        int Right_i = floor(Right);
+        int Bottom_i = ceil(Bottom / TickspacingY);
+        int Top_i = floor(Top);
+
+        float RemX = Left * TickspacingX - offset_x;
+        float RemY = Bottom_i * TickspacingY - offset_y;
+
+        float FirstTickX = Left + RemX * ScaleX;
+        float FirstTickY = Bottom + RemY * ScaleY;
+
+    	int NTicksX = Right_i - Left_i + 1;
+    	int NTicksY = Top_i - Bottom_i + 1;
+
+        /*Draw background lines across X*/
+        glUniform4fv(uniform_color, 1, glm::value_ptr(Color1));
+
+        if (NTicksX > 21)
+            NTicksX = 21;
+
+        for (int i = 0; i < NTicksX; i++)
+        {
+            float x = (Left_i + i) * TickspacingX;
+
+    		ticks[i * 2].x = x;
+    		ticks[i * 2].y = Bottom;
+    		ticks[i * 2 + 1].x = x;
+    		ticks[i * 2 + 1].y = Top;
+    	}
+        //std::cout << NTicksX << std::endl;
+        glUseProgram(Program);
+        glEnableVertexAttribArray(attribute_coord2d);
+
+        glBindBuffer(GL_ARRAY_BUFFER, LineBuf);
+    	glBufferData(GL_ARRAY_BUFFER, sizeof(ticks), ticks, GL_DYNAMIC_DRAW);
+    	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glLineWidth(1);
+    	glDrawArrays(GL_LINES, 0, NTicksX * 2);
+
+        /*Draw background lines across Y*/
+        glUniform4fv(uniform_color, 1, glm::value_ptr(Color1));
+
+        if (NTicksY > 21)
+            NTicksY = 21;
+
+        for (int i = 0; i < NTicksY; i++)
+        {
+            float y = (Bottom_i + i) * TickspacingY;
+
+    		ticks[i * 2].x = Left;
+    		ticks[i * 2].y = y;
+    		ticks[i * 2 + 1].x = Right;
+    		ticks[i * 2 + 1].y = y;
+    	}
+        glUseProgram(Program);
+        glEnableVertexAttribArray(attribute_coord2d);
+
+        glBindBuffer(GL_ARRAY_BUFFER, LineBuf);
+    	glBufferData(GL_ARRAY_BUFFER, sizeof(ticks), ticks, GL_DYNAMIC_DRAW);
+    	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glLineWidth(1);
+    	glDrawArrays(GL_LINES, 0, NTicksY * 2);
+        
     }
 
     void OpenRTPlotter::PointDraw(Plot ToDraw)
@@ -134,7 +252,7 @@ namespace OpenRTP
 
         glEnableVertexAttribArray(attribute_coord2d);
         glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
-        glLineWidth(1);
+        glLineWidth(3);
         glDrawArrays(GL_LINE_STRIP, 0, ToDraw.Function.size());
     }
 
@@ -142,11 +260,9 @@ namespace OpenRTP
     {
         /* Draw the borders */
         float PixelX, PixelY;
-        float sx = 2.0 / WindowWidth;
-	    float sy = 2.0 / WindowHeight;
 
         // Calculate a transformation matrix that gives us the same normalized device coordinates as    above
-    	Transform = ViewportTransform(margin + ticksize + 2, margin + ticksize + 2, WindowWidth -   margin * 2 - ticksize, WindowHeight - margin * 2 - ticksize, &PixelX, &PixelY);
+    	Transform = ViewportTransform(margin + ticksize, margin + ticksize, WindowWidth - margin * 2 - ticksize, WindowHeight - margin * 2 - ticksize, &PixelX, &PixelY);
 
         // Tell our vertex shader about it
     	glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, glm::value_ptr(Transform));
@@ -160,36 +276,44 @@ namespace OpenRTP
         glLineWidth(2);
     	glDrawArrays(GL_LINE_LOOP, 0, 4);
 
-        float tickspacing = 0.1 * powf(10, -floor(log10(scale)));	// desired space between ticks, in graph coordinates
+        Point ticks[42];
+
+        int Left_i = ceil(Left / TickspacingX);
+        int Right_i = floor(Right / TickspacingX);
+        int Bottom_i = ceil(Bottom / TickspacingY);
+        int Top_i = floor(Top / TickspacingY);
+
+        float RemX = Left_i * TickspacingX - Left;
+        float RemY = Bottom_i * TickspacingY - Bottom;
+
+        float FirstTickX = -1 + RemX * ScaleX;
+        float FirstTickY = -1 + RemY * ScaleY;
+
+    	int NTicksX = Right_i - Left_i + 1;
+    	int NTicksY = Top_i - Bottom_i + 1;
 
     	/* Draw the y tick marks */
-        float bottom = -1 / scale - (offset_y);
-        float top = 1 / scale - offset_y;
-        int bottom_i = ceil(bottom / tickspacing);
-        int top_i = floor(top / tickspacing);
-        float remy = bottom_i * tickspacing - bottom;
-        float firstticky = -1 + remy * scale;
-        int nticksy = top_i - bottom_i + 1;
+        int SizeY_I = floor(YScale / 2);
 
-    	Point ticks[42];
+        if (NTicksY > 21)
+            NTicksY = 21;
+    	for (int i = 0; i < NTicksY; i++) 
+        {
+            float y = FirstTickY + i * TickspacingY * ScaleY;
+            float TickScaleY = ((int)(i + Bottom_i) % SizeY_I) ? 0.5 : 1;
 
-        if (nticksy > 21)
-            nticksy = 21;
-    	for (int i = 0; i < nticksy; i++) {
-            float y = firstticky + i * tickspacing * scale;
-            float tickscaley = ((i + bottom_i) % 10) ? 0.5 : 1;
-
-            float x = -1 - ticksize * tickscaley * PixelX;
+            float x = -1 - ticksize * TickScaleY * PixelX;
             float x2 = -1 - ticksize * PixelX;
 
             ticks[i * 2].x = -1;
-    		ticks[i * 2].y = y;
-    		ticks[i * 2 + 1].x = x;
-    		ticks[i * 2 + 1].y = y;
+    	    ticks[i * 2].y = y;
+    	    ticks[i * 2 + 1].x = x;
+    	    ticks[i * 2 + 1].y = y;
 
             glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x2, y), 0, 1);
 
-            std::string s = std::to_string(bottom_i + i);
+            int SInt = (Bottom_i + i) * TickspacingY;
+            std::string s = std::to_string(SInt);
 
             mFont->TextDraw(s, at, Pos.x, Pos.y, RenderRight);
     	}
@@ -200,27 +324,19 @@ namespace OpenRTP
     	glBufferData(GL_ARRAY_BUFFER, sizeof(ticks), ticks, GL_DYNAMIC_DRAW);
     	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glLineWidth(1);
-    	glDrawArrays(GL_LINES, 0, 42);
+    	glDrawArrays(GL_LINES, 0, NTicksY * 2);
 
     	/* Draw the x tick marks */
-    	float left = -1.0 / scale - offset_x;	// left edge, in graph coordinates
-    	float right = 1.0 / scale - offset_x;	// right edge, in graph coordinates
-    	int left_i = ceil(left / tickspacing);	// index of left tick, counted from the origin
-    	int right_i = floor(right / tickspacing);	// index of right tick, counted from the origin
-    	float rem = left_i * tickspacing - left;	// space between left edge of graph and the first tick
+        int SizeX_I = floor(XScale / 2);
 
-    	float firsttick = -1.0 + rem * scale;	// first tick in device coordinates
+    	if (NTicksX > 21)
+    		NTicksX = 21;	// should not happen
 
-    	int nticks = right_i - left_i + 1;	// number of ticks to show
+    	for (int i = 0; i < NTicksX; i++) {
+    		float x = FirstTickX + i * TickspacingX * ScaleX;
+    		float TickScaleX = ((int)(i + Left_i) % SizeX_I) ? 0.5 : 1;
 
-    	if (nticks > 21)
-    		nticks = 21;	// should not happen
-
-    	for (int i = 0; i < nticks; i++) {
-    		float x = firsttick + i * tickspacing * scale;
-    		float tickscale = ((i + left_i) % 10) ? 0.5 : 1;
-
-            float y = -1 - ticksize * tickscale * PixelY;
+            float y = -1 - ticksize * TickScaleX * PixelY;
             float y2 = -1 - ticksize * 0.5 * PixelY;
 
     		ticks[i * 2].x = x;
@@ -228,20 +344,23 @@ namespace OpenRTP
     		ticks[i * 2 + 1].x = x;
     		ticks[i * 2 + 1].y = y;
 
-            glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x, y2), 0, 1);
-
-            std::string s = std::to_string(left_i + i);
-
-            mFont->TextDraw(s, at, Pos.x, Pos.y, RenderLeft);
+            if (x < 1)
+            {
+                glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x, y2), 0, 1);
+                int SInt = (Left_i + i) * TickspacingX;
+                std::string s = std::to_string(SInt);
+                
+                mFont->TextDraw(s, at, Pos.x, Pos.y, RenderLeft);
+            }
     	}
 
         glUseProgram(Program);
         glEnableVertexAttribArray(attribute_coord2d);
 
-    	glBufferData(GL_ARRAY_BUFFER, sizeof ticks, ticks, GL_DYNAMIC_DRAW);
+    	glBufferData(GL_ARRAY_BUFFER, sizeof(ticks), ticks, GL_DYNAMIC_DRAW);
     	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glLineWidth(1);
-    	glDrawArrays(GL_LINES, 0, nticks * 2);
+    	glDrawArrays(GL_LINES, 0, NTicksX * 2);
     }
 
     int OpenRTPlotter::Resources()
@@ -263,6 +382,7 @@ namespace OpenRTP
         glGenBuffers(3, vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 
+        glGenBuffers(1, &PlotBuf);
         glBufferData(GL_ARRAY_BUFFER, ToPlot[0].Function.size() * sizeof(Point), &ToPlot[0].Function.front(), GL_DYNAMIC_DRAW);
 
     	// Create a VBO for the border
@@ -270,14 +390,12 @@ namespace OpenRTP
     	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
     	glBufferData(GL_ARRAY_BUFFER, sizeof border, border, GL_STATIC_DRAW);
 
-        // Generates buffer for the graph lines
-        glGenBuffers(1, &PlotBuf);
-
         return 1;
     }
 
     void OpenRTPlotter::Free()
     {
+        mFont->Free();
         glDeleteProgram(Program);
     }
 
@@ -285,29 +403,47 @@ namespace OpenRTP
     {
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
         {
-            if (offset_x + 0.3 <= -10)
-                offset_x += 0.3;
+            if (offset_x + SpeedX <= -(XScale/2))
+                offset_x += SpeedX;
             else
-             offset_x = -10;
+                offset_x = -(XScale/2);
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-            offset_x -= 0.3;
+            offset_x -= SpeedX;
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-            offset_y -= 0.3;
+            offset_y -= SpeedY;
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
         {
-            if (offset_y + 0.3 <= -10)
-                offset_y += 0.3;
+            if (offset_y + SpeedY <= -(YScale/2))
+                offset_y += SpeedY;
             else
-             offset_y = -10;
+                offset_y = -(YScale/2);
         }
         if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
         {
-            scale *= 1.3;
+            SpeedX *= 1.1;
+            SpeedY *= 1.1;
+            YScale *= 1.1;
+            XScale *= 1.1;
+            ScaleY = 1/(YScale/2);
+            ScaleX = 1/(XScale/2);
+            if (offset_y + 0.3 > -(YScale/2))
+                offset_y = -(YScale/2);
+            if (offset_x + 0.3 > -(XScale/2))
+                offset_x = -(XScale/2);
         }
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
         {
-            scale /= 1.3;
+            SpeedX /= 1.3;
+            SpeedY /= 1.3;
+            YScale /= 1.3;
+            XScale /= 1.3;
+            ScaleY = 1/(YScale/2);
+            ScaleX = 1/(XScale/2);
+            if (offset_y + 0.3 > -(YScale/2))
+                offset_y = -(YScale/2);
+            if (offset_x + 0.3 > -(XScale/2))
+                offset_x = -(XScale/2);
         }
     }
 
@@ -354,7 +490,8 @@ namespace OpenRTP
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
         /* Create a windowed mode window and its OpenGL context */
-        window = glfwCreateWindow(640, 480, Info.Title, NULL, NULL);
+        const char *Title = Info.Title.c_str();
+        window = glfwCreateWindow(640, 480, Title, NULL, NULL);
         if (!window)
         {
             glfwTerminate();
@@ -387,14 +524,43 @@ namespace OpenRTP
         }
     }
     
-    void OpenRTPlotter::InsertPointRangeByPlot(std::vector<Plot> Plot, int Start, int End)
+    void OpenRTPlotter::InsertByPlot(std::vector<Plot> Plot)
     {
-        for (int i = 0; i < Plot.size(); i++)
+        ToPlot = Plot;
+
+        if (ToPlot[0].Function.size() > 0)
         {
-            for (int j = Start; j < End; j++)
+            for (int i = 0; i < ToPlot.size(); i++)
             {
-                ToPlot[i].Function.push_back(Plot[i].Function[j]);
+                int size = ToPlot[i].Function.size() - 1;
+                auto elementEnd = ToPlot[i].Function[size];
+                auto elementStart = ToPlot[i].Function[0];
+                if(elementEnd.y > YScale)
+                {
+                    YScale = ceil(elementEnd.y * 1.05);
+                }
+                if(elementEnd.x > XScale)
+                {
+                    XScale = ceil(elementEnd.x * 1.05);
+                }
+                if(elementStart.y > YScale)
+                {
+                    YScale = ceil(elementStart.y * 1.05);
+                }
+                if(elementStart.x > XScale)
+                {
+                    XScale = ceil(elementStart.x * 1.05);
+                }
             }
         }
+
+        ScaleY = 2/(YScale);
+        ScaleX = 2/(XScale);
+
+        offset_y = -(YScale/2);
+        offset_x = -(XScale/2);
+
+        SpeedX = XScale / 100;
+        SpeedY = YScale / 100;
     }
 }

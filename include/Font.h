@@ -42,6 +42,7 @@ namespace OpenRTP
   	  int Init();
   	  int CreateAtlas(atlas *ToCreate, const char* FontFilename, int FontSize);
   	  void TextDraw(std::string text, atlas *FontAtlas, float mx, float my, RenderMode Mode);
+		void Free();
 
   	  FT_Face face;
   	  GLint uniform_tex;

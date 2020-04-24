@@ -147,6 +147,7 @@ namespace OpenRTP
         glScissor(margin + ticksize, margin + ticksize, WindowWidth - margin * 2 -  ticksize,    WindowHeight - margin * 2 - ticksize);
 
         glEnable(GL_SCISSOR_TEST);
+        glEnable(GL_LINE_SMOOTH);
 
         CalcTicks();
 
@@ -158,7 +159,8 @@ namespace OpenRTP
         }
 
         glViewport(0, 0, WindowWidth, WindowHeight);
-        glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_LINE_SMOOTH);
+        glEnable(GL_SCISSOR_TEST);
     }
 
     void OpenRTPlotter::CalcTicks()

@@ -159,6 +159,7 @@ namespace OpenRTP
         }
 
         glViewport(0, 0, WindowWidth, WindowHeight);
+      
         glDisable(GL_LINE_SMOOTH);
         glEnable(GL_SCISSOR_TEST);
     }
@@ -367,7 +368,7 @@ namespace OpenRTP
 
     int OpenRTPlotter::Resources()
     {
-        Program = create_program("src/shader/v.glsl", "src/shader/f.glsl");
+        Program = create_program("shader/v.glsl", "shader/f.glsl");
     	if (Program == 0)
         {
             std::cout << "Failed creating program\n";

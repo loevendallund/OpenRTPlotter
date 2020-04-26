@@ -159,8 +159,9 @@ namespace OpenRTP
         }
 
         glViewport(0, 0, WindowWidth, WindowHeight);
-        glDisable(GL_SCISSOR_TEST);
+      
         glDisable(GL_LINE_SMOOTH);
+        glEnable(GL_SCISSOR_TEST);
     }
 
     void OpenRTPlotter::CalcTicks()

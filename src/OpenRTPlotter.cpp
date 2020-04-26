@@ -147,6 +147,7 @@ namespace OpenRTP
         glScissor(margin + ticksize, margin + ticksize, WindowWidth - margin * 2 -  ticksize,    WindowHeight - margin * 2 - ticksize);
 
         glEnable(GL_SCISSOR_TEST);
+        glEnable(GL_LINE_SMOOTH);
 
         CalcTicks();
 
@@ -159,6 +160,7 @@ namespace OpenRTP
 
         glViewport(0, 0, WindowWidth, WindowHeight);
         glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_LINE_SMOOTH);
     }
 
     void OpenRTPlotter::CalcTicks()
@@ -365,7 +367,7 @@ namespace OpenRTP
 
     int OpenRTPlotter::Resources()
     {
-        Program = create_program("src/shader/v.glsl", "src/shader/f.glsl");
+        Program = create_program("shader/v.glsl", "shader/f.glsl");
     	if (Program == 0)
         {
             std::cout << "Failed creating program\n";

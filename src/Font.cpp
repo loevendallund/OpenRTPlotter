@@ -16,7 +16,7 @@ namespace OpenRTP
     		return 0;
     	}
 
-    	program = create_program("src/shader/font.v.glsl", "src/shader/font.f.glsl");
+    	program = create_program("shader/font.v.glsl", "shader/font.f.glsl");
     	if(program == 0)
     		return 0;
 

@@ -162,7 +162,7 @@ namespace OpenRTP
         glViewport(0, 0, WindowWidth, WindowHeight);
       
         glDisable(GL_LINE_SMOOTH);
-        glEnable(GL_SCISSOR_TEST);
+        glDisable(GL_SCISSOR_TEST);
     }
 
     void OpenRTPlotter::CalcTicks()
@@ -178,7 +178,7 @@ namespace OpenRTP
 
     void OpenRTPlotter::GraphLine()
     {
-        glm::vec4 Color1 = glm::vec4(0, 0, 0, 1);
+        glm::vec4 Color1 = glm::vec4(0.7, 0.7, 0.7, 1);
 
         Point ticks[42];
 
@@ -187,7 +187,7 @@ namespace OpenRTP
         int Bottom_i = ceil(Bottom / TickspacingY);
         int Top_i = floor(Top);
 
-        float RemX = Left * TickspacingX - offset_x;
+        float RemX = Left_i * TickspacingX - offset_x;
         float RemY = Bottom_i * TickspacingY - offset_y;
 
         float FirstTickX = Left + RemX * ScaleX;
@@ -205,7 +205,7 @@ namespace OpenRTP
         for (int i = 0; i < NTicksX; i++)
         {
             //float x = FirstTickX + i * TickspacingX * ScaleX;
-            float x = (Top_i + i) * TickspacingX;
+            float x = (Left_i + i) * TickspacingX;
 
     		ticks[i * 2].x = x;
     		ticks[i * 2].y = Bottom;
@@ -218,11 +218,11 @@ namespace OpenRTP
         glBindBuffer(GL_ARRAY_BUFFER, LineBuf);
     	glBufferData(GL_ARRAY_BUFFER, sizeof(ticks), ticks, GL_DYNAMIC_DRAW);
     	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
-        glLineWidth(4);
+        glLineWidth(1);
     	glDrawArrays(GL_LINES, 0, NTicksX * 2);
 
         /*Draw background lines across Y*/
-        /*glUniform4fv(uniform_color, 1, glm::value_ptr(Color1));
+        glUniform4fv(uniform_color, 1, glm::value_ptr(Color1));
 
         if (NTicksY > 21)
             NTicksY = 21;
@@ -243,7 +243,7 @@ namespace OpenRTP
     	glBufferData(GL_ARRAY_BUFFER, sizeof(ticks), ticks, GL_DYNAMIC_DRAW);
     	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glLineWidth(1);
-    	glDrawArrays(GL_LINES, 0, NTicksY * 2);*/
+    	glDrawArrays(GL_LINES, 0, NTicksY * 2);
         
     }
 

@@ -19,7 +19,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "ShaderUtil.h"
 #define MAXWIDTH 1024
 
 namespace OpenRTP

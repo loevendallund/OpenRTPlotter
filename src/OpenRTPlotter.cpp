@@ -1,5 +1,6 @@
 #include "OpenRTPlotter.h"
-#include "ShaderUtil.h"
+#include "util/ShaderUtil.h"
+#include "util/DefaultShader.h"
 
 #include <iostream>
 
@@ -177,7 +178,7 @@ namespace OpenRTP
 
     void OpenRTPlotter::GraphLine()
     {
-        glm::vec4 Color1 = glm::vec4(0.7, 0.7, 0.7, 1);
+        glm::vec4 Color1 = glm::vec4(0, 0, 0, 1);
 
         Point ticks[42];
 
@@ -203,25 +204,25 @@ namespace OpenRTP
 
         for (int i = 0; i < NTicksX; i++)
         {
-            float x = (Left_i + i) * TickspacingX;
+            //float x = FirstTickX + i * TickspacingX * ScaleX;
+            float x = (Top_i + i) * TickspacingX;
 
     		ticks[i * 2].x = x;
     		ticks[i * 2].y = Bottom;
     		ticks[i * 2 + 1].x = x;
     		ticks[i * 2 + 1].y = Top;
     	}
-        //std::cout << NTicksX << std::endl;
         glUseProgram(Program);
         glEnableVertexAttribArray(attribute_coord2d);
 
         glBindBuffer(GL_ARRAY_BUFFER, LineBuf);
     	glBufferData(GL_ARRAY_BUFFER, sizeof(ticks), ticks, GL_DYNAMIC_DRAW);
     	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
-        glLineWidth(1);
+        glLineWidth(4);
     	glDrawArrays(GL_LINES, 0, NTicksX * 2);
 
         /*Draw background lines across Y*/
-        glUniform4fv(uniform_color, 1, glm::value_ptr(Color1));
+        /*glUniform4fv(uniform_color, 1, glm::value_ptr(Color1));
 
         if (NTicksY > 21)
             NTicksY = 21;
@@ -242,7 +243,7 @@ namespace OpenRTP
     	glBufferData(GL_ARRAY_BUFFER, sizeof(ticks), ticks, GL_DYNAMIC_DRAW);
     	glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glLineWidth(1);
-    	glDrawArrays(GL_LINES, 0, NTicksY * 2);
+    	glDrawArrays(GL_LINES, 0, NTicksY * 2);*/
         
     }
 
@@ -368,7 +369,7 @@ namespace OpenRTP
 
     int OpenRTPlotter::Resources()
     {
-        Program = create_program("shader/v.glsl", "shader/f.glsl");
+        Program = create_program(Vert, Frag);
     	if (Program == 0)
         {
             std::cout << "Failed creating program\n";
@@ -387,6 +388,8 @@ namespace OpenRTP
 
         glGenBuffers(1, &PlotBuf);
         glBufferData(GL_ARRAY_BUFFER, ToPlot[0].Function.size() * sizeof(Point), &ToPlot[0].Function.front(), GL_DYNAMIC_DRAW);
+        
+        glGenBuffers(1, &LineBuf);
 
     	// Create a VBO for the border
     	static const Point border[4] = { {-1, -1}, {1, -1}, {1, 1}, {-1, 1} };

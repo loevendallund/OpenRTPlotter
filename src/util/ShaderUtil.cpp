@@ -66,9 +66,64 @@ void print_log(GLuint object)
 }
 
 /**
+ * Compile the shader from string 'shader', with error handling
+ */
+GLuint create_shader(const char *ShaderString, GLenum type)
+{
+  const GLchar* source = ShaderString;
+  if (source == NULL) {
+    fprintf(stderr, "Error, invalid shader string"); perror("");
+    return 0;
+  }
+  GLuint res = glCreateShader(type);
+  const GLchar* sources[] = {
+    // Define GLSL version
+#ifdef GL_ES_VERSION_2_0
+    "#version 100\n"  // OpenGL ES 2.0
+#else
+    "#version 120\n"  // OpenGL 2.1
+#endif
+    ,
+    // GLES2 precision specifiers
+#ifdef GL_ES_VERSION_2_0
+    // Define default float precision for fragment shaders:
+    (type == GL_FRAGMENT_SHADER) ?
+    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+    "precision highp float;           \n"
+    "#else                            \n"
+    "precision mediump float;         \n"
+    "#endif                           \n"
+    : ""
+    // Note: OpenGL ES automatically defines this:
+    // #define GL_ES
+#else
+    // Ignore GLES 2 precision specifiers:
+    "#define lowp   \n"
+    "#define mediump\n"
+    "#define highp  \n"
+#endif
+    ,
+    source };
+  glShaderSource(res, 3, sources, NULL);
+  //free((void*)source);
+
+  glCompileShader(res);
+  GLint compile_ok = GL_FALSE;
+  glGetShaderiv(res, GL_COMPILE_STATUS, &compile_ok);
+  if (compile_ok == GL_FALSE) {
+    fprintf(stderr, "Shader string error: ");
+    print_log(res);
+    glDeleteShader(res);
+    return 0;
+  }
+
+  return res;
+}
+
+/**
  * Compile the shader from file 'filename', with error handling
  */
-GLuint create_shader(const char* filename, GLenum type)
+GLuint create_shader_from_file(const char* filename, GLenum type)
 {
   const GLchar* source = file_read(filename);
   if (source == NULL) {
@@ -120,19 +175,51 @@ GLuint create_shader(const char* filename, GLenum type)
   return res;
 }
 
-GLuint create_program(const char *vertexfile, const char *fragmentfile) {
+GLuint create_program(const char* VertexString, const char *FragmentString) 
+{
+	GLuint program = glCreateProgram();
+	GLuint shader;
+
+	if(VertexString != NULL) {
+		shader = create_shader(VertexString, GL_VERTEX_SHADER);
+		if(!shader)
+			return 0;
+		glAttachShader(program, shader);
+	}
+
+	if(FragmentString != NULL) {
+		shader = create_shader(FragmentString, GL_FRAGMENT_SHADER);
+		if(!shader)
+			return 0;
+		glAttachShader(program, shader);
+	}
+
+	glLinkProgram(program);
+	GLint link_ok = GL_FALSE;
+	glGetProgramiv(program, GL_LINK_STATUS, &link_ok);
+	if (!link_ok) {
+		fprintf(stderr, "glLinkProgram:");
+		print_log(program);
+		glDeleteProgram(program);
+		return 0;
+	}
+
+	return program;
+}
+
+GLuint create_program_from_file(const char *vertexfile, const char *fragmentfile) {
 	GLuint program = glCreateProgram();
 	GLuint shader;
 
 	if(vertexfile) {
-		shader = create_shader(vertexfile, GL_VERTEX_SHADER);
+		shader = create_shader_from_file(vertexfile, GL_VERTEX_SHADER);
 		if(!shader)
 			return 0;
 		glAttachShader(program, shader);
 	}
 
 	if(fragmentfile) {
-		shader = create_shader(fragmentfile, GL_FRAGMENT_SHADER);
+		shader = create_shader_from_file(fragmentfile, GL_FRAGMENT_SHADER);
 		if(!shader)
 			return 0;
 		glAttachShader(program, shader);

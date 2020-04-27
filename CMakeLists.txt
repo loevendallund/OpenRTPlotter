@@ -10,6 +10,7 @@ project(OpenRTPlotter VERSION 0.0.3)
 include_directories(${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 include_directories(src)
 file(GLOB LIBSOURCES "src/*.cpp")
+list(APPEND LIBSOURCES "src/util/ShaderUtil.cpp" "src/util/DefaultShader.cpp")
 file(GLOB LIBHEADERS "include/*.h")
 
 find_package(glfw3 3.2 REQUIRED)

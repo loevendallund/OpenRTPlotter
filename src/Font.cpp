@@ -1,4 +1,7 @@
 #include "Font.h"
+
+#include "util/ShaderUtil.h"
+#include "util/DefaultShader.h"
 #include <iostream>
 
 namespace OpenRTP
@@ -16,7 +19,7 @@ namespace OpenRTP
     		return 0;
     	}
 
-    	program = create_program("shader/font.v.glsl", "shader/font.f.glsl");
+    	program = create_program(FontVert, FontFrag);
     	if(program == 0)
     		return 0;
 

@@ -1,6 +1,7 @@
 #include "OpenRTPlotter.h"
 #include "util/ShaderUtil.h"
 #include "util/DefaultShader.h"
+#include "util/Util.h"
 
 #include <iostream>
 
@@ -28,6 +29,9 @@ namespace OpenRTP
 
     OpenRTPlotter::OpenRTPlotter(InitStruct PlotInfo, std::vector<Plot> MultiPlot)
     {
+        //Color *MCol = new Color();
+        Util *MUtil = new Util();
+
         Info.Title = PlotInfo.Title;
         Info.YName = PlotInfo.XName;
         Info.XName = PlotInfo.YName;
@@ -35,10 +39,15 @@ namespace OpenRTP
         ToPlot = MultiPlot;
         MultiLine = true;
 
+        //std::map<std::string, glm::vec4>::iterator It = ColorMap.begin();
+
         if (ToPlot[0].Function.size() > 0)
         {
-            for (int i = 0; i < MultiPlot.size(); i++)
+            for (int i = 0; i < ToPlot.size(); i++)
             {
+                //ToPlot[i].Color = MCol->GetUniqueColor();
+                ToPlot[i].Color = MUtil->GetUniqueColor();
+
                 int size = ToPlot[i].Function.size() - 1;
                 auto element = ToPlot[i].Function[size];
                 if(element.y > YScale)
@@ -51,6 +60,14 @@ namespace OpenRTP
                 }
             }
         }
+
+        /*for (int i = 0; i < ToPlot.size(); i++)
+        {
+            ToPlot[i].Color = It->second;
+            It++;
+            if(It == ColorMap.end())
+                It = ColorMap.begin();
+        }*/
 
         ScaleY = 2/(YScale);
         ScaleX = 2/(XScale);
@@ -532,7 +549,12 @@ namespace OpenRTP
     
     void OpenRTPlotter::InsertByPlot(std::vector<Plot> Plot)
     {
-        ToPlot = Plot;
+        for (int i = 0; i < ToPlot.size(); i++)
+        {
+            ToPlot[i].Function = Plot[i].Function;
+        }
+        
+        //ToPlot = Plot;
 
         if (ToPlot[0].Function.size() > 0)
         {

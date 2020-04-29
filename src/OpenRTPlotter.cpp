@@ -28,7 +28,6 @@ namespace OpenRTP
 
     OpenRTPlotter::OpenRTPlotter(InitStruct PlotInfo, std::vector<Plot> MultiPlot)
     {
-        //Color *MCol = new Color();
         MUtil = new Util();
 
         Info.Title = PlotInfo.Title;
@@ -38,13 +37,10 @@ namespace OpenRTP
         ToPlot = MultiPlot;
         MultiLine = true;
 
-        //std::map<std::string, glm::vec4>::iterator It = ColorMap.begin();
-
         if (ToPlot[0].Function.size() > 0)
         {
             for (int i = 0; i < ToPlot.size(); i++)
             {
-                //ToPlot[i].Color = MCol->GetUniqueColor();
                 ToPlot[i].Color = MUtil->GetUniqueColor();
 
                 int size = ToPlot[i].Function.size() - 1;
@@ -59,14 +55,6 @@ namespace OpenRTP
                 }
             }
         }
-
-        /*for (int i = 0; i < ToPlot.size(); i++)
-        {
-            ToPlot[i].Color = It->second;
-            It++;
-            if(It == ColorMap.end())
-                It = ColorMap.begin();
-        }*/
 
         ScaleY = 2/(YScale);
         ScaleX = 2/(XScale);
@@ -553,8 +541,6 @@ namespace OpenRTP
         {
             ToPlot[i].Function = Plot[i].Function;
         }
-        
-        //ToPlot = Plot;
 
         if (ToPlot[0].Function.size() > 0)
         {

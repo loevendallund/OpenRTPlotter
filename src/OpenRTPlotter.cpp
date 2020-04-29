@@ -14,7 +14,7 @@ namespace OpenRTP
         InitStruct Info;
         float width, height; //Window size
         float *PixelX, *PixelY; //Pixel size
-        std::vector<Plot> ToPlot; //Store all plotting data
+        std::vector<Plot>* ToPlot; //Store all plotting data
         //TmpValues
         const int margin = 20;
         const int ticksize = 20;
@@ -60,7 +60,7 @@ namespace OpenRTP
             MultiLine = true;
         }
 
-        Impl(InitStruct PlotInfo, std::vector<Plot> MultiPlot)
+        Impl(InitStruct PlotInfo, std::vector<Plot>* MultiPlot)
         {
             MUtil = new Util();
 
@@ -71,14 +71,14 @@ namespace OpenRTP
             ToPlot = MultiPlot;
             MultiLine = true;
 
-            if (ToPlot[0].Function.size() > 0)
+            if ((*ToPlot)[0].Function.size() > 0)
             {
-                for (int i = 0; i < ToPlot.size(); i++)
+                for (int i = 0; i < ToPlot->size(); i++)
                 {
-                    ToPlot[i].Color = MUtil->GetUniqueColor();
+                    (*ToPlot)[i].Color = MUtil->GetUniqueColor();
 
-                    int size = ToPlot[i].Function.size() - 1;
-                    auto element = ToPlot[i].Function[size];
+                    int size = (*ToPlot)[i].Function.size() - 1;
+                    auto element = (*ToPlot)[i].Function[size];
                     if(element.y > YScale)
                     {
                         YScale = ceil(element.y * 1.05);
@@ -143,20 +143,15 @@ namespace OpenRTP
             return 0;
         }
 
-        void InsertByPlot(std::vector<Plot> Plot)
+        void UpdatePlot()
         {
-            for (int i = 0; i < ToPlot.size(); i++)
+            if ((*ToPlot)[0].Function.size() > 0)
             {
-                ToPlot[i].Function = Plot[i].Function;
-            }
-
-            if (ToPlot[0].Function.size() > 0)
-            {
-                for (int i = 0; i < ToPlot.size(); i++)
+                for (int i = 0; i < ToPlot->size(); i++)
                 {
-                    int size = ToPlot[i].Function.size() - 1;
-                    auto elementEnd = ToPlot[i].Function[size];
-                    auto elementStart = ToPlot[i].Function[0];
+                    int size = (*ToPlot)[i].Function.size() - 1;
+                    auto elementEnd = (*ToPlot)[i].Function[size];
+                    auto elementStart = (*ToPlot)[i].Function[0];
                     if(elementEnd.y > YScale)
                     {
                         YScale = ceil(elementEnd.y * 1.05);
@@ -256,6 +251,8 @@ namespace OpenRTP
 
         void GraphDraw(glm::mat4 Transform, int WindowWidth, int WindowHeight)
         {
+            std::vector<Plot> Plot = *ToPlot;
+            
             glViewport(margin + ticksize, margin + ticksize, WindowWidth - margin * 2 -     ticksize,       WindowHeight - margin * 2 - ticksize);
 
             glScissor(margin + ticksize, margin + ticksize, WindowWidth - margin * 2 -  ticksize,       WindowHeight - margin * 2 - ticksize);
@@ -267,7 +264,7 @@ namespace OpenRTP
 
             GraphLine();
 
-            for (auto func : ToPlot)
+            for (auto func : Plot)
             {
                 PointDraw(func);
             }
@@ -499,7 +496,7 @@ namespace OpenRTP
             glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 
             glGenBuffers(1, &PlotBuf);
-            glBufferData(GL_ARRAY_BUFFER, ToPlot[0].Function.size() * sizeof(Point), &ToPlot[0].Function.   front(), GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (*ToPlot)[0].Function.size() * sizeof(Point), &(*ToPlot)[0].Function.   front(), GL_DYNAMIC_DRAW);
 
             glGenBuffers(1, &LineBuf);
 
@@ -568,11 +565,11 @@ namespace OpenRTP
 
     Plotter::Plotter() : PImpl{std::make_unique<Impl>()} {}
 
-    Plotter::Plotter(InitStruct PlotInfo, std::vector<Plot> MultiPlot): PImpl{std::make_unique<Impl>(PlotInfo, MultiPlot)} {}
+    Plotter::Plotter(InitStruct PlotInfo, std::vector<Plot>* MultiPlot): PImpl{std::make_unique<Impl>(PlotInfo, MultiPlot)} {}
 
     Plotter::~Plotter() = default;
 
     int Plotter::Init() { return PImpl->Init(); }
     int Plotter::RunPlot() { return PImpl->Run(); }
-    void Plotter::InsertByPlot(std::vector<Plot> Plot) { PImpl->InsertByPlot(Plot); }
+    void Plotter::UpdatePlot() { PImpl->UpdatePlot(); }
 }

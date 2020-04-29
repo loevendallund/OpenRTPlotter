@@ -43,7 +43,10 @@ namespace OpenRTP
             {
                 Shader = CreateShader(VertexString, GL_VERTEX_SHADER);
                 if(!Shader)
+                {
+                    std::cout << "Error, failed to create Vertex Shader" << std::endl;
                     return 0;
+                }
                 glAttachShader(Prog, Shader);
             }
 
@@ -51,7 +54,10 @@ namespace OpenRTP
             {
                 Shader = CreateShader(FragmentString, GL_FRAGMENT_SHADER);
                 if(!Shader)
+                {
+                    std::cout << "Error, failed to create Fragment Shader" << std::endl;
                     return 0;
+                }
                 glAttachShader(Prog, Shader);
             }
 
@@ -59,7 +65,8 @@ namespace OpenRTP
             GLint Link = GL_FALSE;
             glGetProgramiv(Prog, GL_LINK_STATUS, &Link);
             if(!Link)
-            {   
+            {
+                std::cout << "Error, failed to link program" << std::endl;
                 glDeleteProgram(Prog);
                 return 0;
             }
@@ -245,6 +252,7 @@ namespace OpenRTP
             glGetShaderiv(Res, GL_COMPILE_STATUS, &Compile);
             if (Compile == GL_FALSE)
             {
+                std::cout << "Error, failed to create shader" << std::endl;
                 glDeleteShader(Res);
                 return 0;
             }

@@ -51,17 +51,15 @@ namespace OpenRTP {
     {
     public:
         Plotter();
-        Plotter(InitStruct PlotInfo, std::vector<Plot> MultiPlot);
+        Plotter(InitStruct PlotInfo, std::vector<Plot>* MultiPlot);
         ~Plotter();
 
         int Init();
         int RunPlot();
-        void InsertByPlot(std::vector<Plot> Plot);
+        void UpdatePlot();
 
     private:
         class Impl;
         std::unique_ptr<Impl> PImpl;
     };
-
-    //class OpenRTPlotter;
 }

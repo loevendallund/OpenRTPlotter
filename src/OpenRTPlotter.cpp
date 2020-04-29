@@ -1,5 +1,4 @@
 #include "OpenRTPlotter.h"
-#include "util/ShaderUtil.h"
 #include "util/DefaultShader.h"
 
 #include <iostream>
@@ -8,6 +7,7 @@ namespace OpenRTP
 {
     OpenRTPlotter::OpenRTPlotter()
     {
+        MUtil = new Util();
         Info.Title = "Open Real-Time Plotter";
         Info.YName = "Y";
         Info.XName = "X";
@@ -28,6 +28,8 @@ namespace OpenRTP
 
     OpenRTPlotter::OpenRTPlotter(InitStruct PlotInfo, std::vector<Plot> MultiPlot)
     {
+        MUtil = new Util();
+
         Info.Title = PlotInfo.Title;
         Info.YName = PlotInfo.XName;
         Info.XName = PlotInfo.YName;
@@ -37,8 +39,10 @@ namespace OpenRTP
 
         if (ToPlot[0].Function.size() > 0)
         {
-            for (int i = 0; i < MultiPlot.size(); i++)
+            for (int i = 0; i < ToPlot.size(); i++)
             {
+                ToPlot[i].Color = MUtil->GetUniqueColor();
+
                 int size = ToPlot[i].Function.size() - 1;
                 auto element = ToPlot[i].Function[size];
                 if(element.y > YScale)
@@ -69,7 +73,7 @@ namespace OpenRTP
         Resources();
 
         mFont = new Font(window);
-        int result = mFont->Init();
+        int result = mFont->Init(MUtil);
 
         mFont->CreateAtlas(at, "fonts/FreeSans.ttf", 48);
         at = new Font::atlas(mFont->face, 16, mFont->uniform_tex);
@@ -369,16 +373,17 @@ namespace OpenRTP
 
     int OpenRTPlotter::Resources()
     {
-        Program = create_program(Vert, Frag);
+        //Program = create_program(Vert, Frag);
+        Program = MUtil->CreateProgram(Vert, Frag);
     	if (Program == 0)
         {
             std::cout << "Failed creating program\n";
     		return 0;
         }
 
-        attribute_coord2d = get_attrib(Program, "coord2d");
-    	uniform_transform = get_uniform(Program, "transform");
-    	uniform_color = get_uniform(Program, "color");
+        attribute_coord2d = MUtil->GetAttrib(Program, "coord2d");
+    	uniform_transform = MUtil->GetUniform(Program, "transform");
+    	uniform_color = MUtil->GetUniform(Program, "color");
 
         if (attribute_coord2d == -1 || uniform_transform == -1 || uniform_color == -1)
     		return 0;
@@ -532,7 +537,10 @@ namespace OpenRTP
     
     void OpenRTPlotter::InsertByPlot(std::vector<Plot> Plot)
     {
-        ToPlot = Plot;
+        for (int i = 0; i < ToPlot.size(); i++)
+        {
+            ToPlot[i].Function = Plot[i].Function;
+        }
 
         if (ToPlot[0].Function.size() > 0)
         {

@@ -1,6 +1,5 @@
 #include "Font.h"
 
-#include "util/ShaderUtil.h"
 #include "util/DefaultShader.h"
 #include <iostream>
 
@@ -11,7 +10,7 @@ namespace OpenRTP
         Window = TWindow;
     }
 
-    int Font::Init()
+    int Font::Init(Util* MUtil)
     {
         /* Initialize the FreeType2 library */
     	if (FT_Init_FreeType(&ft)) {
@@ -19,13 +18,13 @@ namespace OpenRTP
     		return 0;
     	}
 
-    	program = create_program(FontVert, FontFrag);
+    	program = MUtil->CreateProgram(FontVert, FontFrag);
     	if(program == 0)
     		return 0;
 
-    	attribute_coord = get_attrib(program, "coord");
-    	uniform_tex = get_uniform(program, "tex");
-    	uniform_color = get_uniform(program, "color");
+    	attribute_coord = MUtil->GetAttrib(program, "coord");
+    	uniform_tex = MUtil->GetUniform(program, "tex");
+    	uniform_color = MUtil->GetUniform(program, "color");
 
     	if(attribute_coord == -1 || uniform_tex == -1 || uniform_color == -1)
     		return 0;

@@ -19,6 +19,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../src/util/Util.h"
+
 #define MAXWIDTH 1024
 
 namespace OpenRTP
@@ -38,7 +40,7 @@ namespace OpenRTP
   	  struct atlas;
   	  Font(GLFWwindow* TWindow);
 
-  	  int Init();
+  	  int Init(Util* MUtil);
   	  int CreateAtlas(atlas *ToCreate, const char* FontFilename, int FontSize);
   	  void TextDraw(std::string text, atlas *FontAtlas, float mx, float my, RenderMode Mode);
 		void Free();

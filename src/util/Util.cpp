@@ -33,6 +33,55 @@ namespace OpenRTP
 
             return Ret;
         }
+
+        GLuint CreateProgram(const char* VertexString, const char* FragmentString)
+        {
+            GLint Prog = glCreateProgram();
+            GLuint Shader;
+
+            if(VertexString != NULL)
+            {
+                Shader = CreateShader(VertexString, GL_VERTEX_SHADER);
+                if(!Shader)
+                    return 0;
+                glAttachShader(Prog, Shader);
+            }
+
+            if(VertexString != NULL)
+            {
+                Shader = CreateShader(FragmentString, GL_FRAGMENT_SHADER);
+                if(!Shader)
+                    return 0;
+                glAttachShader(Prog, Shader);
+            }
+
+            glLinkProgram(Prog);
+            GLint Link = GL_FALSE;
+            glGetProgramiv(Prog, GL_LINK_STATUS, &Link);
+            if(!Link)
+            {   
+                glDeleteProgram(Prog);
+                return 0;
+            }
+
+            return Prog;
+        }
+
+        GLint GetAttrib(GLuint Program, const char* Name)
+        {
+            GLint Attrib = glGetAttribLocation(Program, Name);
+            if(Attrib == -1)
+                std::cout << "Error, Couldn't bind attrib: " << Name << std::endl;
+            return Attrib;
+        }
+
+        GLint GetUniform(GLuint Program, const char* Name)
+        {
+            GLint Uniform = glGetUniformLocation(Program, Name);
+            if(Uniform == -1)
+                std::cout << "Error, Couldn't bind uniform: " << Name << std::endl;
+            return Uniform;
+        }
     private:
         std::map<std::string, glm::vec4> ColorMap;
         std::vector<glm::vec4> PrivateColorVector;
@@ -155,6 +204,53 @@ namespace OpenRTP
             ColorMap.insert(std::make_pair("yellow", glm::vec4(1.000f, 1.000f, 0.000f, 1.0f)));
             ColorMap.insert(std::make_pair("yellowgreen", glm::vec4(0.604f, 0.804f, 0.196f, 1.0f)));
         }
+
+        GLint CreateShader(const char* ShaderString, GLenum Type)
+        {
+            if(ShaderString == NULL)
+            {
+                std::cout << "Error, invalid shader string" << std::endl;
+                return 0;
+            }
+
+            GLuint Res = glCreateShader(Type);
+            const GLchar* ShaderSource[] = {
+                #ifdef GL_ES_VERSION_2_0
+                    "#version 100\n"  // OpenGL ES 2.0
+                #else
+                    "#version 120\n"  // OpenGL 2.1
+                #endif
+                    ,
+                #ifdef GL_ES_VERSION_2_0
+                    // Define default float precision for fragment shaders:
+                    (type == GL_FRAGMENT_SHADER) ?
+                    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+                    "precision highp float;           \n"
+                    "#else                            \n"
+                    "precision mediump float;         \n"
+                    "#endif                           \n"
+                    : ""
+                #else
+                    "#define lowp   \n"
+                    "#define mediump\n"
+                    "#define highp  \n"
+                #endif
+                    ,
+                    ShaderString
+            };
+            glShaderSource(Res, 3, ShaderSource, NULL);
+
+            glCompileShader(Res);
+            GLint Compile = GL_FALSE;
+            glGetShaderiv(Res, GL_COMPILE_STATUS, &Compile);
+            if (Compile == GL_FALSE)
+            {
+                glDeleteShader(Res);
+                return 0;
+            }
+
+            return Res;
+        }
     };
 
     Util::Util() : PImpl{std::make_unique<Impl>()}
@@ -165,4 +261,8 @@ namespace OpenRTP
     Util::~Util() = default;
 
     glm::vec4 Util::GetUniqueColor() { return PImpl->GetUniqueColor(); }
+    GLuint Util::CreateProgram(const char* VertexString, const char* FragmentString) { return PImpl->CreateProgram(VertexString, FragmentString); }
+    GLint Util::GetAttrib(GLuint Program, const char* Name) { return PImpl->GetAttrib(Program, Name); }
+    GLint Util::GetUniform(GLuint Program, const char* Name) { return PImpl->GetUniform(Program, Name); }
+
 }

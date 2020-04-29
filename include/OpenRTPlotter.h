@@ -14,6 +14,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Font.h"
+#include "../src/util/Util.h"
 
 namespace OpenRTP {
     class OpenRTPlotter;
@@ -79,6 +80,7 @@ namespace OpenRTP {
 
         GLFWwindow* window;
         Font *mFont;
+        Util *MUtil;
 
         float width, height; //Window size
         float *PixelX, *PixelY; //Pixel size

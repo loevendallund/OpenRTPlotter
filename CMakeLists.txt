@@ -5,7 +5,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # set the project name
-project(OpenRTPotter VERSION 0.0.3)
+project(OpenRTPlotter VERSION 0.0.4)
 
 include_directories(${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 include_directories(src)

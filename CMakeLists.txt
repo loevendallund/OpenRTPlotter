@@ -7,6 +7,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # set the project name
 project(OpenRTPlotter VERSION 0.0.4)
 
+
 include_directories(${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 include_directories(src)
 file(GLOB LIBSOURCES "src/*.cpp")

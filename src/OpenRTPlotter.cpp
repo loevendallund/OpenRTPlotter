@@ -23,11 +23,11 @@ namespace OpenRTP
 
         float offset_x = -10;
         float offset_y = -10;
-        float scale = 0.1;
-        float ScaleX = 0.1;
-        float ScaleY = 0.1;
-        float XScale = 10;
-        float YScale = 10;
+        float scale = 1;
+        float ScaleX = 1;
+        float ScaleY = 1;
+        float XScale = 3;
+        float YScale = 3;
         float SpeedX = 0.3;
         float SpeedY = 0.3;
 
@@ -110,7 +110,7 @@ namespace OpenRTP
             int result = mFont->InitFont(MUtil);
 
             mFont->CreateAtlas(at, "fonts/FreeSans.ttf", 16);
-            at = new atlas(mFont->Face, 16, mFont->UniformTex);
+            //at = new atlas(mFont->Face, 16);
 
             return ret;
         }
@@ -145,8 +145,8 @@ namespace OpenRTP
 
         void UpdatePlot()
         {
-            if ((*ToPlot)[0].Function.size() > 0)
-            {
+            //if ((*ToPlot)[0].Function.size() > 0)
+            //{
                 for (int i = 0; i < ToPlot->size(); i++)
                 {
                     int size = (*ToPlot)[i].Function.size() - 1;
@@ -169,7 +169,7 @@ namespace OpenRTP
                         XScale = ceil(elementStart.x * 1.05);
                     }
                 }
-            }
+            //}
 
             ScaleY = 2/(YScale);
             ScaleX = 2/(XScale);

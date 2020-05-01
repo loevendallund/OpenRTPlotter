@@ -2,6 +2,7 @@
 
 #include "util/DefaultShader.h"
 #include <iostream>
+#include <vector>
 
 namespace OpenRTP
 {
@@ -13,7 +14,12 @@ namespace OpenRTP
   	    GLint UniformColor;
   	    GLuint vbo;
 
+        atlas* DefaultAtlas;
+
   	    FT_Library ft;
+        FT_Face Face;
+        GLint* IUniformTex;
+        std::vector<std::string> DefaultFonts = {"Noto Sans", "Liberation Serif","Liberation Serif"};
     public:
         Impl(GLFWwindow* TWindow)
         {
@@ -35,12 +41,15 @@ namespace OpenRTP
     	    AttribCoord = MUtil->GetAttrib(Program, "coord");
     	    *UniformTex = MUtil->GetUniform(Program, "tex");
     	    UniformColor = MUtil->GetUniform(Program, "color");
+            IUniformTex = UniformTex;
 
     	    if(AttribCoord == -1 || *UniformTex == -1 || UniformColor == -1)
     	    	return 0;
 
     	    // Create the vertex buffer object
     	    glGenBuffers(1, &vbo);
+
+            CreateDefaultAtlas(DefaultAtlas, 16);
 
     	    return 1;
         }
@@ -53,13 +62,60 @@ namespace OpenRTP
     	    	return 0;
     	    }
 
-            //ToCreate = new atlas(face, FontSize, uniform_tex);
+            GLint Uniform = *IUniformTex;
+            //ToCreate = new atlas(Face, 16, Uniform);
+
+            return 1;
+        }
+
+        int CreateDefaultAtlas(atlas *ToCreate, int FontSize)
+        {
+            FcConfig* Config = FcInitLoadConfigAndFonts();
+            FcPattern* Pat = FcPatternCreate();
+            FcObjectSet* ObSet = FcObjectSetBuild(FC_FAMILY, FC_STYLE, FC_LANG, FC_FILE, (char *) 0);
+            FcFontSet* FontSet = FcFontList(Config, Pat, ObSet);
+            std::string FontFile;
+
+            for (int i = 0; FontSet && i < FontSet->nfont; ++i)
+            {
+                FcPattern* Font = FontSet->fonts[i];
+                FcChar8 *File, *Style, *Family;
+                if (FcPatternGetString(Font, FC_FILE, 0, &File) == FcResultMatch && FcPatternGetString(Font, FC_FAMILY, 0, &Family) == FcResultMatch && FcPatternGetString(Font, FC_STYLE, 0, &Style) == FcResultMatch)
+                {
+                    std::string fam = (char*)Family;
+                    std::string style = (char*)Style;
+                    for (int i = 0; i < DefaultFonts.size(); i++)
+                    {
+                        if( fam == DefaultFonts[i] && style == "Regular")
+                        {
+                            FontFile = (char*)File;
+                            goto FontFound;
+                        }
+                    }
+                }
+            }
+            FontFound:
+
+            const char* CFile = FontFile.c_str();
+            if (FT_New_Face(ft, CFile, 0, &Face)) {
+                std::cout << "Could not open font: " << CFile << std::endl;
+    	    	return 0;
+    	    }
+            
+            GLint Uniform = *IUniformTex;
+            DefaultAtlas = new atlas(Face, 16, Uniform);
 
             return 1;
         }
 
         void TextDraw(std::string text, atlas *FontAtlas, float mx, float my, RenderMode Mode, GLint UniformTex)
         {
+            atlas* TDAtlas = FontAtlas;
+            if(FontAtlas != NULL)
+                TDAtlas = FontAtlas;
+            else
+                TDAtlas = DefaultAtlas;
+
             int WindowWidth, WindowHeight;
             glfwGetFramebufferSize(Window, &WindowWidth, &WindowHeight);
 
@@ -74,7 +130,7 @@ namespace OpenRTP
             /* Set font size to 48 pixels, color to black */
 	        glUniform4fv(UniformColor, 1, black);
 
-            glBindTexture(GL_TEXTURE_2D, FontAtlas->tex);
+            glBindTexture(GL_TEXTURE_2D, TDAtlas->tex);
             glUniform1i(UniformTex, 0);
 
             glEnableVertexAttribArray(AttribCoord);
@@ -86,10 +142,10 @@ namespace OpenRTP
             switch (Mode)
             {
             case RenderRight:
-                CoordsV = TextRight(text, &tc, FontAtlas, mx, my);
+                CoordsV = TextRight(text, &tc, TDAtlas, mx, my);
                 break;
             case RenderLeft:
-                CoordsV = TextLeft(text, &tc, FontAtlas, mx, my);
+                CoordsV = TextLeft(text, &tc, TDAtlas, mx, my);
                 break;
             }
             //std::vector<TextPoint> CoordsV = TextLeft(text, &tc, FontAtlas, mx, my);

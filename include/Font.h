@@ -18,6 +18,7 @@
 #include <glm/vec2.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <fontconfig/fontconfig.h>
 
 #include "../src/util/Util.h"
 

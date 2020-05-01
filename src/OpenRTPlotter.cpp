@@ -23,11 +23,11 @@ namespace OpenRTP
 
         float offset_x = -10;
         float offset_y = -10;
-        float scale = 0.1;
-        float ScaleX = 0.1;
-        float ScaleY = 0.1;
-        float XScale = 10;
-        float YScale = 10;
+        float scale = 1;
+        float ScaleX = 1;
+        float ScaleY = 1;
+        float XScale = 3;
+        float YScale = 3;
         float SpeedX = 0.3;
         float SpeedY = 0.3;
 
@@ -47,7 +47,6 @@ namespace OpenRTP
         GLuint LineBuf;
         GLuint PlotBuf;
         bool MultiLine;
-        atlas *at;
     public:
         Impl()
         {
@@ -56,7 +55,6 @@ namespace OpenRTP
             Info.YName = "Y";
             Info.XName = "X";
 
-            //TestFunctions();
             MultiLine = true;
         }
 
@@ -109,9 +107,6 @@ namespace OpenRTP
             mFont = new Font(window);
             int result = mFont->InitFont(MUtil);
 
-            mFont->CreateAtlas(at, "fonts/FreeSans.ttf", 16);
-            at = new atlas(mFont->Face, 16, mFont->UniformTex);
-
             return ret;
         }
 
@@ -145,8 +140,8 @@ namespace OpenRTP
 
         void UpdatePlot()
         {
-            if ((*ToPlot)[0].Function.size() > 0)
-            {
+            //if ((*ToPlot)[0].Function.size() > 0)
+            //{
                 for (int i = 0; i < ToPlot->size(); i++)
                 {
                     int size = (*ToPlot)[i].Function.size() - 1;
@@ -169,7 +164,7 @@ namespace OpenRTP
                         XScale = ceil(elementStart.x * 1.05);
                     }
                 }
-            }
+            //}
 
             ScaleY = 2/(YScale);
             ScaleX = 2/(XScale);
@@ -428,7 +423,7 @@ namespace OpenRTP
                 int SInt = (Bottom_i + i) * TickspacingY;
                 std::string s = std::to_string(SInt);
 
-                mFont->TextDraw(s, at, Pos.x, Pos.y, RenderRight);
+                mFont->TextDraw(s, NULL, Pos.x, Pos.y, RenderRight);
     	    }
             glUseProgram(Program);
             glEnableVertexAttribArray(attribute_coord2d);
@@ -463,7 +458,7 @@ namespace OpenRTP
                     int SInt = (Left_i + i) * TickspacingX;
                     std::string s = std::to_string(SInt);
 
-                    mFont->TextDraw(s, at, Pos.x, Pos.y, RenderLeft);
+                    mFont->TextDraw(s, NULL, Pos.x, Pos.y, RenderLeft);
                 }
     	    }
 

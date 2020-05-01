@@ -5,7 +5,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # set the project name
-project(OpenRTPlotter VERSION 0.0.3)
+project(OpenRTPotter VERSION 0.0.3)
 
 include_directories(${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 include_directories(src)
@@ -29,9 +29,12 @@ if (Freetype_FOUND)
   link_libraries(${FREETYPE_LIBRARIES})
 endif()
 
+find_package(Fontconfig REQUIRED)
+
 add_library(OpenRTP SHARED ${LIBSOURCES})
-target_include_directories(OpenRTP PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include ${OPENGL_INCLUDE_DIRS} glfw Freetype ${FREETYPE_INCLUDE_DIRS})
-target_link_libraries(OpenRTP ${OPENGL_LIBRARIES} glfw)
+
+target_include_directories(OpenRTP PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include glfw OpenGL::GL Freetype ${FREETYPE_INCLUDE_DIRS} ${Fontconfig_INCLUDE_DIRS})
+target_link_libraries(OpenRTP ${OPENGL_LIBRARIES} glfw ${Fontconfig_LIBRARIES})
 
 install(TARGETS OpenRTP LIBRARY DESTINATION lib)
 install(FILES ${LIBHEADERS} DESTINATION include/OpenRTP)

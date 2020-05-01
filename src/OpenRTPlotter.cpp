@@ -47,7 +47,6 @@ namespace OpenRTP
         GLuint LineBuf;
         GLuint PlotBuf;
         bool MultiLine;
-        atlas *at;
     public:
         Impl()
         {
@@ -56,7 +55,6 @@ namespace OpenRTP
             Info.YName = "Y";
             Info.XName = "X";
 
-            //TestFunctions();
             MultiLine = true;
         }
 
@@ -108,9 +106,6 @@ namespace OpenRTP
 
             mFont = new Font(window);
             int result = mFont->InitFont(MUtil);
-
-            mFont->CreateAtlas(at, "fonts/FreeSans.ttf", 16);
-            //at = new atlas(mFont->Face, 16);
 
             return ret;
         }
@@ -428,7 +423,7 @@ namespace OpenRTP
                 int SInt = (Bottom_i + i) * TickspacingY;
                 std::string s = std::to_string(SInt);
 
-                mFont->TextDraw(s, at, Pos.x, Pos.y, RenderRight);
+                mFont->TextDraw(s, NULL, Pos.x, Pos.y, RenderRight);
     	    }
             glUseProgram(Program);
             glEnableVertexAttribArray(attribute_coord2d);
@@ -463,7 +458,7 @@ namespace OpenRTP
                     int SInt = (Left_i + i) * TickspacingX;
                     std::string s = std::to_string(SInt);
 
-                    mFont->TextDraw(s, at, Pos.x, Pos.y, RenderLeft);
+                    mFont->TextDraw(s, NULL, Pos.x, Pos.y, RenderLeft);
                 }
     	    }
 

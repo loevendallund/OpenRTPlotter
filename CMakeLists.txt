@@ -32,8 +32,9 @@ endif()
 find_package(Fontconfig REQUIRED)
 
 add_library(OpenRTP SHARED ${LIBSOURCES})
-target_include_directories(OpenRTP PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include ${OPENGL_INCLUDE_DIRS} glfw Freetype ${FREETYPE_INCLUDE_DIRS} ${Fontconfig_INCLUDE_DIRS})
-target_link_libraries(OpenRTP ${OPENGL_LIBRARIES} glfw  ${Fontconfig_LIBRARIES})
+
+target_include_directories(OpenRTP PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include glfw OpenGL::GL Freetype ${FREETYPE_INCLUDE_DIRS} ${Fontconfig_INCLUDE_DIRS})
+target_link_libraries(OpenRTP ${OPENGL_LIBRARIES} glfw ${Fontconfig_LIBRARIES})
 
 install(TARGETS OpenRTP LIBRARY DESTINATION lib)
 install(FILES ${LIBHEADERS} DESTINATION include/OpenRTP)

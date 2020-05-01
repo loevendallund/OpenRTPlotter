@@ -17,11 +17,9 @@ namespace OpenRTP
         atlas* DefaultAtlas;
 
   	    FT_Library ft;
-        FT_Face* Face;
+        FT_Face Face;
         GLint* IUniformTex;
-
-        //std::string DefaultFonts[2] = {"LiberationSerif-Regular", ""};
-        std::vector<std::string> DefaultFonts = {"Noto Serif Tibetan"};
+        std::vector<std::string> DefaultFonts = {"Noto Sans", "Liberation Serif","Liberation Serif"};
     public:
         Impl(GLFWwindow* TWindow)
         {
@@ -56,16 +54,16 @@ namespace OpenRTP
     	    return 1;
         }
 
-        int CreateAtlas(atlas *ToCreate, const char* FontFilename, int FontSize)
+        int CreateAtlas(atlas *ToCreate, const char* FontFilename, int FontSize, FT_Face *FontFace)
         {
             /* Load a font */
-    	    if (FT_New_Face(ft, FontFilename, 0, Face)) {
+    	    if (FT_New_Face(ft, FontFilename, 0, FontFace)) {
     	    	fprintf(stderr, "Could not open font %s\n", FontFilename);
     	    	return 0;
     	    }
 
             GLint Uniform = *IUniformTex;
-            ToCreate = new atlas(*Face, 16, Uniform);
+            //ToCreate = new atlas(Face, 16, Uniform);
 
             return 1;
         }
@@ -73,54 +71,39 @@ namespace OpenRTP
         int CreateDefaultAtlas(atlas *ToCreate, int FontSize)
         {
             FcConfig* Config = FcInitLoadConfigAndFonts();
-            /*FcPattern* Pat = FcPatternCreate();
+            FcPattern* Pat = FcPatternCreate();
             FcObjectSet* ObSet = FcObjectSetBuild(FC_FAMILY, FC_STYLE, FC_LANG, FC_FILE, (char *) 0);
             FcFontSet* FontSet = FcFontList(Config, Pat, ObSet);
-            //FcChar8 *TFile;
             std::string FontFile;
 
-            std::cout << "Total matching fonts: " << FontSet->nfont << std::endl;
-            //for (int i = 0; FontSet && i < FontSet->nfont; ++i)
-            //{
-                FcPattern* Font = FontSet->fonts[100];
-                FcPatternPrint(Font);
+            for (int i = 0; FontSet && i < FontSet->nfont; ++i)
+            {
+                FcPattern* Font = FontSet->fonts[i];
                 FcChar8 *File, *Style, *Family;
                 if (FcPatternGetString(Font, FC_FILE, 0, &File) == FcResultMatch && FcPatternGetString(Font, FC_FAMILY, 0, &Family) == FcResultMatch && FcPatternGetString(Font, FC_STYLE, 0, &Style) == FcResultMatch)
                 {
-                    FontFile = (char*)File;
-                    std::cout << "Filename: " << File << " (family, " << Family << ", Style, " << Style << ") " << FontFile << std::endl;
-                }
-            //}*/
-
-            FcPattern* Pattern;
-            std::string FontFile;
-
-            for (int i = 0; i < DefaultFonts.size(); i++)
-            {
-                std::cout << DefaultFonts[i] << std::endl;
-                Pattern = FcNameParse((const FcChar8*)(DefaultFonts[i].c_str()));
-                FcConfigSubstitute(Config, Pattern, FcMatchPattern);
-                FcDefaultSubstitute(Pattern);
-
-                FcResult Res;
-                FcPattern* Font = FcFontMatch(Config, Pattern, &Res);
-                FcChar8* File = NULL;
-                if(Font && FcPatternGetString(Font, FC_FILE, 0, &File))
-                {
-                    FontFile = (char*)File;
-                    break;
+                    std::string fam = (char*)Family;
+                    std::string style = (char*)Style;
+                    for (int i = 0; i < DefaultFonts.size(); i++)
+                    {
+                        if( fam == DefaultFonts[i] && style == "Regular")
+                        {
+                            FontFile = (char*)File;
+                            goto FontFound;
+                        }
+                    }
                 }
             }
-
+            FontFound:
 
             const char* CFile = FontFile.c_str();
-            if (FT_New_Face(ft, CFile, 0, Face)) {
-    	    	fprintf(stderr, "Could not open font %s\n", CFile);
+            if (FT_New_Face(ft, CFile, 0, &Face)) {
+                std::cout << "Could not open font: " << CFile << std::endl;
     	    	return 0;
     	    }
             
             GLint Uniform = *IUniformTex;
-            DefaultAtlas = new atlas(*Face, 16, Uniform);
+            DefaultAtlas = new atlas(Face, 16, Uniform);
 
             return 1;
         }
@@ -324,7 +307,7 @@ namespace OpenRTP
     Font::~Font() = default;
 
     int Font::InitFont(Util* MUtil) { return PImpl->InitFont(MUtil, &UniformTex); }
-    int Font::CreateAtlas(atlas *ToCreate, const char* FontFilename, int FontSize) { return PImpl->CreateAtlas(ToCreate, FontFilename, FontSize); }
+    int Font::CreateAtlas(atlas *ToCreate, const char* FontFilename, int FontSize) { return PImpl->CreateAtlas(ToCreate, FontFilename, FontSize, &Face); }
     void Font::TextDraw(std::string text, atlas *FontAtlas, float mx, float my, RenderMode Mode) { PImpl->TextDraw(text, FontAtlas, mx, my, Mode, UniformTex); }
 	void Font::Free() { PImpl->Free(); }
 }

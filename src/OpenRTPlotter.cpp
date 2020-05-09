@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#define MINSIZE 1000
+
 namespace OpenRTP
 {
     class Plotter::Impl
@@ -21,13 +23,13 @@ namespace OpenRTP
         float TickX = 1.0;
         float STickX = 0.5;
 
-        float offset_x = -10;
-        float offset_y = -10;
-        float scale = 1;
-        float ScaleX = 1;
-        float ScaleY = 1;
-        float XScale = 3;
-        float YScale = 3;
+        double offset_x = -10;
+        double offset_y = -10;
+        double scale = 1;
+        double ScaleX = 0.01;
+        double ScaleY = 0.01;
+        double XScale = 3;
+        double YScale = 3;
         float SpeedX = 0.3;
         float SpeedY = 0.3;
 
@@ -140,8 +142,6 @@ namespace OpenRTP
 
         void UpdatePlot()
         {
-            //if ((*ToPlot)[0].Function.size() > 0)
-            //{
                 for (int i = 0; i < ToPlot->size(); i++)
                 {
                     int size = (*ToPlot)[i].Function.size() - 1;
@@ -164,7 +164,6 @@ namespace OpenRTP
                         XScale = ceil(elementStart.x * 1.05);
                     }
                 }
-            //}
 
             ScaleY = 2/(YScale);
             ScaleX = 2/(XScale);
@@ -238,7 +237,7 @@ namespace OpenRTP
             glm::mat4 Transform = glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(ScaleX, ScaleY, 1)   ), glm::vec3(offset_x, offset_y, 0));
             glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, glm::value_ptr(Transform));
 
-            GraphDraw(Transform, WindowWidth, WindowHeight);
+			GraphDraw(Transform, WindowWidth, WindowHeight);
             BorderDraw(Transform, WindowWidth, WindowHeight);
 
             glDisableVertexAttribArray(attribute_coord2d);
@@ -288,14 +287,15 @@ namespace OpenRTP
             Point ticks[42];
 
             int Left_i = ceil(Left / TickspacingX);
-            int Right_i = floor(Right);
+            int Right_i = floor(Right / TickspacingX);
             int Bottom_i = ceil(Bottom / TickspacingY);
-            int Top_i = floor(Top);
+            int Top_i = floor(Top / TickspacingY);
 
             float RemX = Left_i * TickspacingX - offset_x;
             float RemY = Bottom_i * TickspacingY - offset_y;
 
-            float FirstTickX = Left + RemX * ScaleX;
+            //float FirstTickX = Left + RemX * ScaleX;
+			float FirstTickX = -1 + RemX * ScaleX;
             float FirstTickY = Bottom + RemY * ScaleY;
 
     	    int NTicksX = Right_i - Left_i + 1;
@@ -309,8 +309,7 @@ namespace OpenRTP
 
             for (int i = 0; i < NTicksX; i++)
             {
-                //float x = FirstTickX + i * TickspacingX * ScaleX;
-                float x = (Left_i + i) * TickspacingX;
+				double x = (Left_i + i) * TickspacingX;
 
     	    	ticks[i * 2].x = x;
     	    	ticks[i * 2].y = Bottom;
@@ -334,7 +333,7 @@ namespace OpenRTP
 
             for (int i = 0; i < NTicksY; i++)
             {
-                float y = (Bottom_i + i) * TickspacingY;
+                double y = (Bottom_i + i) * TickspacingY;
 
     	    	ticks[i * 2].x = Left;
     	    	ticks[i * 2].y = y;
@@ -401,15 +400,12 @@ namespace OpenRTP
     	    int NTicksY = Top_i - Bottom_i + 1;
 
     	    /* Draw the y tick marks */
-            int SizeY_I = floor(YScale / 2);
-
             if (NTicksY > 21)
                 NTicksY = 21;
     	    for (int i = 0; i < NTicksY; i++) 
             {
                 float y = FirstTickY + i * TickspacingY * ScaleY;
-                float TickScaleY = ((int)(i + Bottom_i) % SizeY_I) ? 0.5 : 1;
-
+                float TickScaleY = ((int)(i + Bottom_i) % 10) ? 0.5 : 1;
                 float x = -1 - ticksize * TickScaleY * PixelX;
                 float x2 = -1 - ticksize * PixelX;
 
@@ -420,8 +416,11 @@ namespace OpenRTP
 
                 glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x2, y), 0, 1);
 
-                int SInt = (Bottom_i + i) * TickspacingY;
+                double SInt = (Bottom_i + i) * TickspacingY;
                 std::string s = std::to_string(SInt);
+				s.erase(s.find_last_not_of('0') + 1, std::string::npos);
+				if(s.at(s.length() - 1) == '.')
+					s.erase(s.length() - 1, std::string::npos);
 
                 mFont->TextDraw(s, NULL, Pos.x, Pos.y, RenderRight);
     	    }
@@ -435,14 +434,12 @@ namespace OpenRTP
     	    glDrawArrays(GL_LINES, 0, NTicksY * 2);
 
     	    /* Draw the x tick marks */
-            int SizeX_I = floor(XScale / 2);
-
     	    if (NTicksX > 21)
     	    	NTicksX = 21;	// should not happen
 
     	    for (int i = 0; i < NTicksX; i++) {
     	    	float x = FirstTickX + i * TickspacingX * ScaleX;
-    	    	float TickScaleX = ((int)(i + Left_i) % SizeX_I) ? 0.5 : 1;
+    	    	float TickScaleX = ((int)(i + Left_i) % 10) ? 0.5 : 1;
 
                 float y = -1 - ticksize * TickScaleX * PixelY;
                 float y2 = -1 - ticksize * 0.5 * PixelY;
@@ -455,8 +452,11 @@ namespace OpenRTP
                 if (x < 1)
                 {
                     glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x, y2), 0, 1);
-                    int SInt = (Left_i + i) * TickspacingX;
+                    double SInt = (Left_i + i) * TickspacingX;
                     std::string s = std::to_string(SInt);
+					s.erase(s.find_last_not_of('0') + 1, std::string::npos);
+					if(s.at(s.length()-1) == '.')
+						s.erase(s.length()-1, std::string::npos);
 
                     mFont->TextDraw(s, NULL, Pos.x, Pos.y, RenderLeft);
                 }
@@ -507,7 +507,7 @@ namespace OpenRTP
         {
             if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
             {
-                if (offset_x + SpeedX <= -(XScale/2))
+                if (offset_x + SpeedX < -(XScale/2))
                     offset_x += SpeedX;
                 else
                     offset_x = -(XScale/2);
@@ -518,38 +518,54 @@ namespace OpenRTP
                 offset_y -= SpeedY;
             if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
             {
-                if (offset_y + SpeedY <= -(YScale/2))
+                if (offset_y + SpeedY < -(YScale/2))
                     offset_y += SpeedY;
                 else
                     offset_y = -(YScale/2);
             }
             if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
             {
-                SpeedX *= 1.1;
-                SpeedY *= 1.1;
-                YScale *= 1.1;
-                XScale *= 1.1;
-                ScaleY = 1/(YScale/2);
-                ScaleX = 1/(XScale/2);
-                if (offset_y + 0.3 > -(YScale/2))
+				ScaleAxis(false);
+                if (offset_y + SpeedY > -(YScale/2))
                     offset_y = -(YScale/2);
-                if (offset_x + 0.3 > -(XScale/2))
+                if (offset_x + SpeedX > -(XScale/2))
                     offset_x = -(XScale/2);
             }
             if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
             {
-                SpeedX /= 1.3;
-                SpeedY /= 1.3;
-                YScale /= 1.3;
-                XScale /= 1.3;
-                ScaleY = 1/(YScale/2);
-                ScaleX = 1/(XScale/2);
-                if (offset_y + 0.3 > -(YScale/2))
-                    offset_y = -(YScale/2);
-                if (offset_x + 0.3 > -(XScale/2))
-                    offset_x = -(XScale/2);
+				ScaleAxis(true);
+				if (offset_y + SpeedY > -(YScale/2))
+					offset_y = -(YScale/2);
+				if (offset_x + SpeedX > -(XScale/2))
+					offset_x = -(XScale/2);
             }
         }
+
+		void ScaleAxis(bool In)
+		{
+			if(In && (ScaleX < MINSIZE && ScaleY < MINSIZE))
+			{
+				SpeedX /= 1.3;
+				SpeedY /= 1.3;
+				XScale /= 1.3;
+				YScale /= 1.3;
+				ScaleX = 1/(XScale/2);
+				ScaleY = 1/(YScale/2);
+			}			
+			if (!In)
+			{
+				SpeedX *= 1.1;
+				SpeedY *= 1.1;
+				XScale *= 1.1;
+				YScale *= 1.1;
+				ScaleX = 1/(XScale/2);
+				ScaleY = 1/(YScale/2);
+			}
+			else if (ScaleX > MINSIZE)
+				ScaleX = MINSIZE;
+			else if (ScaleY > MINSIZE)
+				ScaleY = MINSIZE;
+		}
         
         void Free()
         {

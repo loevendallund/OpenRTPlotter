@@ -20,6 +20,7 @@ namespace OpenRTP
         //TmpValues
         const int margin = 20;
         const int ticksize = 20;
+		const int BTOffset = 10; //Border text offset
         float TickX = 1.0;
         float STickX = 0.5;
 
@@ -369,7 +370,8 @@ namespace OpenRTP
             float PixelX, PixelY;
 
             // Calculate a transformation matrix that gives us the same normalized device coordinates   as    above
-    	    Transform = ViewportTransform(margin + ticksize, margin + ticksize, WindowWidth - margin * 2    - ticksize, WindowHeight - margin * 2 - ticksize, &PixelX, &PixelY);
+    	    Transform = ViewportTransform(margin + ticksize, margin + ticksize, WindowWidth - margin * 2 - ticksize, WindowHeight - margin * 2 - ticksize, &PixelX, &PixelY);
+			auto ViewTransform = ViewportTransform(margin + ticksize, margin + ticksize - BTOffset, WindowWidth - margin * 2 - ticksize, WindowHeight - margin * 2 -ticksize, NULL, NULL);
 
             // Tell our vertex shader about it
     	    glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, glm::value_ptr(Transform));
@@ -451,7 +453,7 @@ namespace OpenRTP
 
                 if (x < 1)
                 {
-                    glm::vec4 Pos = Transform * glm::vec4(glm::vec2(x, y2), 0, 1);
+                    glm::vec4 Pos = ViewTransform * glm::vec4(glm::vec2(x, y2), 0, 1);
                     double SInt = (Left_i + i) * TickspacingX;
                     std::string s = std::to_string(SInt);
 					s.erase(s.find_last_not_of('0') + 1, std::string::npos);

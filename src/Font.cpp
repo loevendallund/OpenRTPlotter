@@ -182,7 +182,8 @@ namespace OpenRTP
             {
                 *NumOfChar += 6;
                 XPos = x;
-                YPos = -y;
+                YPos = -y - FontAtlas->c[Text[TPointer]].bt * SizeY;
+				//YPos += FontAtlas->c[Text[0]].bt * SizeY;
                 Width = FontAtlas->c[Text[TPointer]].bw * SizeX;
                 Height = FontAtlas->c[Text[TPointer]].bh * SizeY;
 
@@ -251,12 +252,12 @@ namespace OpenRTP
             {
                 *NumOfChar += 6;
                 XPos = x;
-                YPos = -y;
+                YPos = -y - FontAtlas->c[Text[TPointer]].bt * SizeY;
                 Width = FontAtlas->c[Text[TPointer]].bw * SizeX;
                 Height = FontAtlas->c[Text[TPointer]].bh * SizeY;
 
-                x -= FontAtlas->c[Text[TPointer]].ax * SizeX;
-                y -= FontAtlas->c[Text[TPointer]].ay * SizeY;
+                x -= FontAtlas->c[Text[TPointer - 1]].ax * SizeX;
+                y -= FontAtlas->c[Text[TPointer - 1]].ay * SizeY;
 
                 if(!Width || !Height)
                     continue;
